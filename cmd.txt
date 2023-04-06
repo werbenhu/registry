@@ -1,0 +1,7 @@
+./cmd.exe -addr="172.16.3.3:7370" -advertise="172.16.3.3:7370" -id=node1 -http-addr=:8080 -service="172.16.3.3:8080"
+
+./cmd.exe -addr="172.16.3.3:7371" -advertise="172.16.3.3:7371" -id=node2 -http-addr=:8081 -service="172.16.3.3:8081" -members="172.16.3.3:7370"
+
+./cmd.exe -addr="172.16.3.3:7372" -advertise="172.16.3.3:7372" -id=node3 -http-addr=:8082 -service="172.16.3.3:8082" -members="172.16.3.3:7370"
+
+./cmd.exe -addr="172.16.3.3:7373" -advertise="172.16.3.3:7373" -id=node4 -http-addr=:8083 -service="172.16.3.3:8083" -members="172.16.3.3:7370"
