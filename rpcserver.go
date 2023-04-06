@@ -6,7 +6,6 @@ import (
 	"net"
 
 	"github.com/werbenhu/chash"
-	"github.com/werbenhu/srouter/discovery"
 	"google.golang.org/grpc"
 )
 
@@ -31,7 +30,7 @@ func (s *RpcServer) Match(ctx context.Context, req *MatchRequest) (*MatchRespons
 		return nil, err
 	}
 
-	agent := &discovery.Agent{}
+	agent := &Agent{}
 	if err := agent.Unmarshal(payload); err != nil {
 		return nil, err
 	}
@@ -53,7 +52,7 @@ func (s *RpcServer) Members(ctx context.Context, req *MembersRequest) (*MembersR
 	elements := group.GetElements()
 	services := make([]*MatchResponse, 0)
 	for _, element := range elements {
-		agent := &discovery.Agent{}
+		agent := &Agent{}
 		if err := agent.Unmarshal(element.Payload); err == nil {
 			service := &MatchResponse{
 				Id:    agent.Service.Id,

@@ -7,7 +7,6 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/werbenhu/chash"
-	"github.com/werbenhu/srouter/discovery"
 )
 
 type Http struct {
@@ -41,7 +40,7 @@ func (h *Http) match(c *gin.Context) {
 		return
 	}
 
-	agent := &discovery.Agent{}
+	agent := &Agent{}
 	if err := agent.Unmarshal(payload); err != nil {
 		c.JSON(http.StatusOK, gin.H{
 			"code": 3,
@@ -71,9 +70,9 @@ func (h *Http) members(c *gin.Context) {
 	}
 
 	elements := group.GetElements()
-	services := make([]discovery.Service, 0)
+	services := make([]Service, 0)
 	for _, element := range elements {
-		agent := &discovery.Agent{}
+		agent := &Agent{}
 		if err := agent.Unmarshal(element.Payload); err == nil {
 			services = append(services, agent.Service)
 		}
