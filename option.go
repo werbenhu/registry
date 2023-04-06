@@ -11,7 +11,7 @@ type Option struct {
 	Addr      string
 	Advertise string
 	Members   string
-	HttpAddr  string
+	ApiPort   string
 	Service   string
 }
 
@@ -25,11 +25,9 @@ func OptId(id string) IOption {
 	}
 }
 
-func OptHttpAddr(addr string) IOption {
+func OptApiPort(port string) IOption {
 	return func(o *Option) {
-		if addr != "" {
-			o.HttpAddr = addr
-		}
+		o.ApiPort = port
 	}
 }
 

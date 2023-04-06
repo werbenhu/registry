@@ -1,6 +1,8 @@
-package http
+package api
 
 import (
+	"log"
+	"net"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -9,13 +11,12 @@ import (
 )
 
 type Http struct {
-	addr string
+	port     string
+	listener net.Listener
 }
 
-func New(addr string) *Http {
-	return &Http{
-		addr: addr,
-	}
+func NewHttp() *Http {
+	return &Http{}
 }
 
 func (h *Http) match(c *gin.Context) {
@@ -58,7 +59,7 @@ func (h *Http) match(c *gin.Context) {
 	})
 }
 
-func (h *Http) elements(c *gin.Context) {
+func (h *Http) members(c *gin.Context) {
 	name := c.Query("group")
 	group, err := chash.GetGroup(name)
 	if err != nil {
@@ -87,9 +88,21 @@ func (h *Http) elements(c *gin.Context) {
 	})
 }
 
-func (h *Http) Start() {
+func (h *Http) Start(port string) error {
+	var err error
+	h.port = port
+
 	r := gin.Default()
 	r.GET("/match", h.match)
-	r.GET("/elements", h.elements)
-	go r.Run(h.addr)
+	r.GET("/members", h.members)
+
+	h.listener, err = net.Listen("tcp", ":"+h.port)
+	if err != nil {
+		log.Fatalf("[ERROR] web listen to port:%s failed, err:%s", h.port, err.Error())
+	}
+	return r.RunListener(h.listener)
+}
+
+func (h *Http) Stop() {
+	h.listener.Close()
 }

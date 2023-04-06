@@ -16,7 +16,7 @@ func main() {
 	advertise := flag.String("advertise", "172.16.3.3:7370", "")
 	members := flag.String("members", "", "")
 	service := flag.String("service", "", "")
-	httpAddr := flag.String("http-addr", ":8080", "")
+	port := flag.String("api-port", "8080", "")
 
 	flag.Parse()
 	sigs := make(chan os.Signal, 1)
@@ -32,7 +32,7 @@ func main() {
 		srouter.OptAddr(*addr),
 		srouter.OptAdvertise(*advertise),
 		srouter.OptMembers(*members),
-		srouter.OptHttpAddr(*httpAddr),
+		srouter.OptApiPort(*port),
 		srouter.OptService(*service),
 	})
 

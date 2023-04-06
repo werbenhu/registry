@@ -1,0 +1,27 @@
+syntax = "proto3";
+
+option go_package = "/api";
+
+message MatchRequest {
+  string  group = 1;
+  string key = 2;
+}
+
+message Service {
+  string  id = 1;
+  string group = 2;
+  string addr = 3;
+}
+
+message MembersRequest {
+  string  group = 1;
+}
+
+message MembersResponse {
+  repeated Service services = 1;
+}
+
+service Router {
+  rpc Match (MatchRequest) returns (Service) {}
+  rpc Members (MembersRequest) returns (MembersResponse) {}
+}

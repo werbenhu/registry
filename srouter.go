@@ -6,7 +6,7 @@ import (
 	"strconv"
 
 	"github.com/werbenhu/chash"
-	"github.com/werbenhu/srouter/api/http"
+	"github.com/werbenhu/srouter/api"
 	"github.com/werbenhu/srouter/discovery"
 )
 
@@ -17,7 +17,7 @@ const (
 type SRouter struct {
 	opt  *Option
 	serf discovery.Discovery
-	http *http.Http
+	api  api.Api
 }
 
 func New(opts []IOption) *SRouter {
@@ -37,7 +37,7 @@ func New(opts []IOption) *SRouter {
 		s.opt.Service,
 	))
 
-	s.http = http.New(s.opt.HttpAddr)
+	s.api = api.NewHttp()
 	s.serf.SetHandler(s)
 	return s
 }
@@ -47,7 +47,9 @@ func (s *SRouter) Serve() error {
 		if err := s.serf.Start(); err != nil {
 			log.Panic(err)
 		}
-		s.http.Start()
+		if err := s.api.Start(s.opt.ApiPort); err != nil {
+			log.Panic(err)
+		}
 	}()
 	return nil
 }
