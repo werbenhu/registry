@@ -1,4 +1,4 @@
-package discovery
+package srouter
 
 import (
 	"encoding/json"

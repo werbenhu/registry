@@ -1,4 +1,4 @@
-package api
+package srouter
 
 import (
 	"context"
@@ -19,7 +19,7 @@ func NewRpcServer() *RpcServer {
 	return &RpcServer{}
 }
 
-func (s *RpcServer) Match(ctx context.Context, req *MatchRequest) (*Service, error) {
+func (s *RpcServer) Match(ctx context.Context, req *MatchRequest) (*MatchResponse, error) {
 
 	group, err := chash.GetGroup(req.Group)
 	if err != nil {
@@ -36,7 +36,7 @@ func (s *RpcServer) Match(ctx context.Context, req *MatchRequest) (*Service, err
 		return nil, err
 	}
 
-	return &Service{
+	return &MatchResponse{
 		Id:    agent.Service.Id,
 		Group: agent.Service.Group,
 		Addr:  agent.Service.Addr,
@@ -51,11 +51,11 @@ func (s *RpcServer) Members(ctx context.Context, req *MembersRequest) (*MembersR
 	}
 
 	elements := group.GetElements()
-	services := make([]*Service, 0)
+	services := make([]*MatchResponse, 0)
 	for _, element := range elements {
 		agent := &discovery.Agent{}
 		if err := agent.Unmarshal(element.Payload); err == nil {
-			service := &Service{
+			service := &MatchResponse{
 				Id:    agent.Service.Id,
 				Group: agent.Service.Group,
 				Addr:  agent.Service.Addr,

@@ -6,8 +6,6 @@ import (
 	"strconv"
 
 	"github.com/werbenhu/chash"
-	"github.com/werbenhu/srouter/api"
-	"github.com/werbenhu/srouter/discovery"
 )
 
 const (
@@ -16,8 +14,8 @@ const (
 
 type SRouter struct {
 	opt  *Option
-	serf discovery.Discovery
-	api  api.Api
+	serf Discovery
+	api  Api
 }
 
 func New(opts []IOption) *SRouter {
@@ -28,7 +26,7 @@ func New(opts []IOption) *SRouter {
 	}
 	s := &SRouter{opt: option}
 
-	s.serf = discovery.NewSerf(discovery.NewAgent(
+	s.serf = NewSerf(NewAgent(
 		s.opt.Id,
 		s.opt.Addr,
 		s.opt.Advertise,
@@ -37,7 +35,7 @@ func New(opts []IOption) *SRouter {
 		s.opt.Service,
 	))
 
-	s.api = api.NewHttp()
+	s.api = NewHttp()
 	s.serf.SetHandler(s)
 	return s
 }
@@ -58,25 +56,25 @@ func (s *SRouter) Close() {
 	s.serf.Stop()
 }
 
-func (s *SRouter) OnAgentJoin(agent *discovery.Agent) error {
+func (s *SRouter) OnAgentJoin(agent *Agent) error {
 	log.Printf("[INFO] a new agent joined, id:%s, addr:%s, group:%s, service:%s\n",
 		agent.Id, agent.Addr, agent.Service.Group, agent.Service.Addr)
 	return s.insert(agent)
 }
 
-func (s *SRouter) OnAgentLeave(agent *discovery.Agent) error {
+func (s *SRouter) OnAgentLeave(agent *Agent) error {
 	log.Printf("[INFO] a new agent left, id:%s, addr:%s, group:%s, service:%s\n",
 		agent.Id, agent.Addr, agent.Service.Group, agent.Service.Addr)
 	return s.delete(agent)
 }
 
-func (s *SRouter) OnAgentUpdate(agent *discovery.Agent) error {
+func (s *SRouter) OnAgentUpdate(agent *Agent) error {
 	log.Printf("[INFO] a new agent updated, id:%s, addr:%s, group:%s, service:%s\n",
 		agent.Id, agent.Addr, agent.Service.Group, agent.Service.Addr)
 	return s.insert(agent)
 }
 
-func (s *SRouter) delete(agent *discovery.Agent) error {
+func (s *SRouter) delete(agent *Agent) error {
 	log.Printf("[INFO] srouter delete agent, id:%s, addr:%s, group:%s, service:%s\n",
 		agent.Id, agent.Addr, agent.Service.Group, agent.Service.Addr)
 
@@ -96,7 +94,7 @@ func (s *SRouter) delete(agent *discovery.Agent) error {
 	return nil
 }
 
-func (s *SRouter) insert(agent *discovery.Agent) error {
+func (s *SRouter) insert(agent *Agent) error {
 	log.Printf("[INFO] srouter insert agent, id:%s, addr:%s, group:%s, service:%s\n",
 		agent.Id, agent.Addr, agent.Service.Group, agent.Service.Addr)
 
@@ -121,7 +119,7 @@ func (s *SRouter) insert(agent *discovery.Agent) error {
 	return nil
 }
 
-func (s *SRouter) Match(groupName string, key string) (*discovery.Service, error) {
+func (s *SRouter) Match(groupName string, key string) (*Service, error) {
 	group, err := chash.GetGroup(groupName)
 	if err != nil {
 		return nil, err
@@ -131,15 +129,15 @@ func (s *SRouter) Match(groupName string, key string) (*discovery.Service, error
 		return nil, err
 	}
 
-	agent := &discovery.Agent{}
+	agent := &Agent{}
 	if err := agent.Unmarshal(payload); err != nil {
 		return nil, err
 	}
 	return &agent.Service, nil
 }
 
-func (s *SRouter) Members(groupName string) []*discovery.Service {
-	services := make([]*discovery.Service, 0)
+func (s *SRouter) Members(groupName string) []*Service {
+	services := make([]*Service, 0)
 	group, err := chash.GetGroup(groupName)
 	if err != nil {
 		return services
@@ -148,7 +146,7 @@ func (s *SRouter) Members(groupName string) []*discovery.Service {
 	elements := group.GetElements()
 
 	for _, element := range elements {
-		agent := &discovery.Agent{}
+		agent := &Agent{}
 		if err := agent.Unmarshal(element.Payload); err != nil {
 			log.Printf("[ERROR] element to agent err:%s\n", err.Error())
 			continue

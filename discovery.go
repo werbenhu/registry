@@ -1,4 +1,4 @@
-package discovery
+package srouter
 
 type Handler interface {
 	OnAgentJoin(*Agent) error
