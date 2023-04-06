@@ -2,7 +2,6 @@ package srouter
 
 import (
 	"context"
-	"log"
 	"net"
 
 	"github.com/werbenhu/chash"
@@ -43,7 +42,6 @@ func (s *RpcServer) Match(ctx context.Context, req *MatchRequest) (*MatchRespons
 }
 
 func (s *RpcServer) Members(ctx context.Context, req *MembersRequest) (*MembersResponse, error) {
-
 	group, err := chash.GetGroup(req.Group)
 	if err != nil {
 		return nil, err
@@ -74,7 +72,6 @@ func (s *RpcServer) Start(port string) error {
 	s.port = port
 	listener, err := net.Listen("tcp", ":"+s.port)
 	if err != nil {
-		log.Fatalf("[ERROR] rpc listen to port:%s failed, err:%s", s.port, err.Error())
 		return err
 	}
 

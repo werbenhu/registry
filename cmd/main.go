@@ -14,7 +14,7 @@ func main() {
 	id := flag.String("id", "node1", "")
 	addr := flag.String("addr", "172.16.3.3:7370", "")
 	advertise := flag.String("advertise", "172.16.3.3:7370", "")
-	members := flag.String("members", "", "")
+	routers := flag.String("routers", "", "")
 	service := flag.String("service", "", "")
 	port := flag.String("api-port", "8080", "")
 
@@ -31,7 +31,7 @@ func main() {
 		srouter.OptId(*id),
 		srouter.OptAddr(*addr),
 		srouter.OptAdvertise(*advertise),
-		srouter.OptMembers(*members),
+		srouter.OptRouters(*routers),
 		srouter.OptApiPort(*port),
 		srouter.OptService(*service),
 	})

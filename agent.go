@@ -5,14 +5,6 @@ import (
 	"sync"
 )
 
-const (
-	TagGroup    = "group"
-	TagService  = "service"
-	TagReplicas = "replicas"
-
-	DefaultReplicas = "10000"
-)
-
 type Service struct {
 	Id    string `json:"id"`
 	Group string `json:"group"`
@@ -32,7 +24,7 @@ type Agent struct {
 	Id        string  `json:"id"`
 	Addr      string  `json:"addr"`
 	Advertise string  `json:"advertise"`
-	Members   string  `json:"-"`
+	Routers   string  `json:"-"`
 	Replicas  string  `json:"replicas"`
 	Service   Service `json:"service"`
 	tags      map[string]string
@@ -43,7 +35,7 @@ func newSimpleAgent(id string, addr string, advertise string) *Agent {
 		Id:        id,
 		Addr:      addr,
 		Advertise: advertise,
-		Members:   "",
+		Routers:   "",
 		Replicas:  DefaultReplicas,
 		Service: Service{
 			Id: id,
@@ -51,12 +43,12 @@ func newSimpleAgent(id string, addr string, advertise string) *Agent {
 	}
 }
 
-func NewAgent(id string, addr string, advertise string, members string, group string, serviceAddr string) *Agent {
+func NewAgent(id string, addr string, advertise string, routers string, group string, serviceAddr string) *Agent {
 	return &Agent{
 		Id:        id,
 		Addr:      addr,
 		Advertise: advertise,
-		Members:   members,
+		Routers:   routers,
 		Replicas:  DefaultReplicas,
 		Service: Service{
 			Id:    id,

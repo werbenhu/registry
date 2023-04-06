@@ -1,7 +1,6 @@
 package srouter
 
 import (
-	"errors"
 	"log"
 	"strconv"
 
@@ -9,7 +8,12 @@ import (
 )
 
 const (
-	GroupName = "router-group"
+	TagGroup    = "group"
+	TagService  = "service"
+	TagReplicas = "replicas"
+
+	SRouterName     = "srouter-group"
+	DefaultReplicas = "10000"
 )
 
 type SRouter struct {
@@ -30,12 +34,12 @@ func New(opts []IOption) *SRouter {
 		s.opt.Id,
 		s.opt.Addr,
 		s.opt.Advertise,
-		s.opt.Members,
-		GroupName,
+		s.opt.Routers,
+		SRouterName,
 		s.opt.Service,
 	))
 
-	s.api = NewHttp()
+	s.api = NewRpcServer()
 	s.serf.SetHandler(s)
 	return s
 }
@@ -75,16 +79,13 @@ func (s *SRouter) OnAgentUpdate(agent *Agent) error {
 }
 
 func (s *SRouter) delete(agent *Agent) error {
-	log.Printf("[INFO] srouter delete agent, id:%s, addr:%s, group:%s, service:%s\n",
-		agent.Id, agent.Addr, agent.Service.Group, agent.Service.Addr)
-
 	if len(agent.Service.Group) == 0 {
-		return errors.New("srouter delete agent's group name can't be empty")
+		return ErrGroupNameEmpty
 	}
 
 	replicas, err := strconv.Atoi(agent.Replicas)
 	if err != nil {
-		return errors.New("srouter agent replicas param error")
+		return ErrReplicasParam
 	}
 
 	group, _ := chash.CreateGroup(agent.Service.Group, replicas)
@@ -95,16 +96,13 @@ func (s *SRouter) delete(agent *Agent) error {
 }
 
 func (s *SRouter) insert(agent *Agent) error {
-	log.Printf("[INFO] srouter insert agent, id:%s, addr:%s, group:%s, service:%s\n",
-		agent.Id, agent.Addr, agent.Service.Group, agent.Service.Addr)
-
 	if len(agent.Service.Group) == 0 {
-		return errors.New("srouter insert agent's group name can't be empty")
+		return ErrGroupNameEmpty
 	}
 
 	replicas, err := strconv.Atoi(agent.Replicas)
 	if err != nil {
-		return errors.New("srouter agent replicas param error")
+		return ErrReplicasParam
 	}
 
 	payload, err := agent.Marshal()

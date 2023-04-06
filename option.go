@@ -10,7 +10,7 @@ type Option struct {
 	Id        string
 	Addr      string
 	Advertise string
-	Members   string
+	Routers   string
 	ApiPort   string
 	Service   string
 }
@@ -47,10 +47,10 @@ func OptAddr(addr string) IOption {
 	}
 }
 
-func OptMembers(members string) IOption {
+func OptRouters(routers string) IOption {
 	return func(o *Option) {
-		if members != "" {
-			o.Members = members
+		if routers != "" {
+			o.Routers = routers
 		}
 	}
 }

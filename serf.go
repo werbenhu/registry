@@ -69,9 +69,9 @@ func (s *Serf) Start() error {
 		MinLevel: logutils.LogLevel("ERROR"),
 		Writer: io.MultiWriter(&lumberjack.Logger{
 			Filename:   "./log/serf.log",
-			MaxSize:    10, // megabytes
+			MaxSize:    10,
 			MaxBackups: 3,
-			MaxAge:     28, //days
+			MaxAge:     28,
 		}, os.Stderr),
 	}
 
@@ -88,8 +88,8 @@ func (s *Serf) Start() error {
 
 	go s.Loop()
 	log.Printf("[INFO] serf discovery started, current agent addr:%s, advertise addr:%s\n", s.agent.Addr, s.agent.Advertise)
-	if len(s.agent.Members) > 0 {
-		members := strings.Split(s.agent.Members, ",")
+	if len(s.agent.Routers) > 0 {
+		members := strings.Split(s.agent.Routers, ",")
 		s.Join(members)
 	}
 	return nil
@@ -162,7 +162,6 @@ func (s *Serf) Loop() {
 						log.Printf("[ERROR] serf handle agent leave err:%s\n", err.Error())
 					}
 				}
-
 			}
 		}
 	}

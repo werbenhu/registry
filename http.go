@@ -1,7 +1,6 @@
 package srouter
 
 import (
-	"log"
 	"net"
 	"net/http"
 
@@ -50,7 +49,7 @@ func (h *Http) match(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"code": 1,
+		"code": 0,
 		"msg":  "success",
 		"data": gin.H{
 			"service": agent.Service,
@@ -79,7 +78,7 @@ func (h *Http) members(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"code": 1,
+		"code": 0,
 		"msg":  "success",
 		"data": gin.H{
 			"services": services,
@@ -97,7 +96,7 @@ func (h *Http) Start(port string) error {
 
 	h.listener, err = net.Listen("tcp", ":"+h.port)
 	if err != nil {
-		log.Fatalf("[ERROR] web listen to port:%s failed, err:%s", h.port, err.Error())
+		return err
 	}
 	return r.RunListener(h.listener)
 }
