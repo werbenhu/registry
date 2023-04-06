@@ -57,6 +57,7 @@ func (s *SRouter) Serve() error {
 }
 
 func (s *SRouter) Close() {
+	s.api.Stop()
 	s.serf.Stop()
 }
 
