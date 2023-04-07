@@ -86,7 +86,7 @@ if err != nil {
 
 // 根据用户ID使用一致性hash分配服务
 service, err := client.Match(groupName, "user-id-1")
-log.Printf("[INFO] match key:%s, serviceId:%s, serviceAddr:%s\n", key, 
+log.Printf("[INFO] match key:%s, serviceId:%s, serviceAddr:%s\n", key, service.Id, service.Addr)
 
 // 获取group组所有的服务
 allService, err := client.Members(group)
