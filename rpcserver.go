@@ -29,15 +29,15 @@ func (s *RpcServer) Match(ctx context.Context, req *MatchRequest) (*MatchRespons
 		return nil, err
 	}
 
-	agent := &Agent{}
-	if err := agent.Unmarshal(payload); err != nil {
+	m := &Member{}
+	if err := m.Unmarshal(payload); err != nil {
 		return nil, err
 	}
 
 	return &MatchResponse{
-		Id:    agent.Service.Id,
-		Group: agent.Service.Group,
-		Addr:  agent.Service.Addr,
+		Id:    m.Service.Id,
+		Group: m.Service.Group,
+		Addr:  m.Service.Addr,
 	}, nil
 }
 
@@ -50,12 +50,12 @@ func (s *RpcServer) Members(ctx context.Context, req *MembersRequest) (*MembersR
 	elements := group.GetElements()
 	services := make([]*MatchResponse, 0)
 	for _, element := range elements {
-		agent := &Agent{}
-		if err := agent.Unmarshal(element.Payload); err == nil {
+		m := &Member{}
+		if err := m.Unmarshal(element.Payload); err == nil {
 			service := &MatchResponse{
-				Id:    agent.Service.Id,
-				Group: agent.Service.Group,
-				Addr:  agent.Service.Addr,
+				Id:    m.Service.Id,
+				Group: m.Service.Group,
+				Addr:  m.Service.Addr,
 			}
 			services = append(services, service)
 		}

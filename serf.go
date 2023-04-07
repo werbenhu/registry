@@ -17,32 +17,32 @@ import (
 
 type Serf struct {
 	events  chan serf.Event
-	agent   *Agent
+	member  *Member
 	serf    *serf.Serf
 	handler Handler
-	agents  sync.Map
+	members sync.Map
 }
 
-func NewSerf(agent *Agent) *Serf {
+func NewSerf(local *Member) *Serf {
 	s := &Serf{
 		events: make(chan serf.Event, 3),
-		agent:  agent,
+		member: local,
 	}
 	return s
 }
 
-func (s *Serf) LocalAgent() *Agent {
-	node, ok := s.agents.Load(s.agent.Id)
+func (s *Serf) LocalMember() *Member {
+	node, ok := s.members.Load(s.member.Id)
 	if !ok {
 		return nil
 	}
-	return node.(*Agent)
+	return node.(*Member)
 }
 
-func (s *Serf) Agents() []*Agent {
-	nodes := make([]*Agent, 0)
-	s.agents.Range(func(key any, val any) bool {
-		nodes = append(nodes, val.(*Agent))
+func (s *Serf) Members() []*Member {
+	nodes := make([]*Member, 0)
+	s.members.Range(func(key any, val any) bool {
+		nodes = append(nodes, val.(*Member))
 		return true
 	})
 	return nodes
@@ -60,8 +60,8 @@ func (s *Serf) Stop() {
 func (s *Serf) Start() error {
 	var err error
 	cfg := serf.DefaultConfig()
-	cfg.MemberlistConfig.AdvertiseAddr, cfg.MemberlistConfig.AdvertisePort = s.splitHostPort(s.agent.Advertise)
-	cfg.MemberlistConfig.BindAddr, cfg.MemberlistConfig.BindPort = s.splitHostPort(s.agent.Addr)
+	cfg.MemberlistConfig.AdvertiseAddr, cfg.MemberlistConfig.AdvertisePort = s.splitHostPort(s.member.Advertise)
+	cfg.MemberlistConfig.BindAddr, cfg.MemberlistConfig.BindPort = s.splitHostPort(s.member.Addr)
 	cfg.EventCh = s.events
 
 	filter := &logutils.LevelFilter{
@@ -78,8 +78,8 @@ func (s *Serf) Start() error {
 	cfg.Logger = log.New(os.Stderr, "", log.LstdFlags)
 	cfg.Logger.SetOutput(filter)
 	cfg.MemberlistConfig.Logger = cfg.Logger
-	cfg.NodeName = s.agent.Id
-	cfg.Tags = s.agent.GetTags()
+	cfg.NodeName = s.member.Id
+	cfg.Tags = s.member.GetTags()
 
 	s.serf, err = serf.Create(cfg)
 	if err != nil {
@@ -87,9 +87,9 @@ func (s *Serf) Start() error {
 	}
 
 	go s.Loop()
-	log.Printf("[INFO] serf discovery started, current agent addr:%s, advertise addr:%s\n", s.agent.Addr, s.agent.Advertise)
-	if len(s.agent.Routers) > 0 {
-		members := strings.Split(s.agent.Routers, ",")
+	log.Printf("[INFO] serf discovery started, current member addr:%s, advertise addr:%s\n", s.member.Addr, s.member.Advertise)
+	if len(s.member.Routers) > 0 {
+		members := strings.Split(s.member.Routers, ",")
 		s.Join(members)
 	}
 	return nil
@@ -119,47 +119,47 @@ func (s *Serf) Loop() {
 		case serf.EventMemberJoin:
 			for _, member := range e.(serf.MemberEvent).Members {
 				addr := fmt.Sprintf("%s:%d", member.Addr, member.Port)
-				latest := newSimpleAgent(member.Name, addr, addr)
+				latest := NewSimpleMember(member.Name, addr, addr)
 				latest.SetTags(member.Tags)
 
 				if s.handler != nil {
-					if err := s.handler.OnAgentJoin(latest); err == nil {
-						s.agents.Store(latest.Id, latest)
+					if err := s.handler.OnMemberJoin(latest); err == nil {
+						s.members.Store(latest.Id, latest)
 						continue
 					} else {
-						log.Printf("[ERROR] serf handle agent join err:%s\n", err.Error())
+						log.Printf("[ERROR] serf handle member join err:%s\n", err.Error())
 					}
 				}
-				s.agents.Store(latest.Id, latest)
+				s.members.Store(latest.Id, latest)
 			}
 
 		case serf.EventMemberUpdate:
 			for _, member := range e.(serf.MemberEvent).Members {
 				addr := fmt.Sprintf("%s:%d", member.Addr, member.Port)
-				latest := newSimpleAgent(member.Name, addr, addr)
+				latest := NewSimpleMember(member.Name, addr, addr)
 				latest.SetTags(member.Tags)
 
 				if s.handler != nil {
-					if err := s.handler.OnAgentUpdate(latest); err == nil {
-						s.agents.Store(latest.Id, latest)
+					if err := s.handler.OnMemberUpdate(latest); err == nil {
+						s.members.Store(latest.Id, latest)
 						continue
 					} else {
-						log.Printf("[ERROR] serf handle agent update err:%s\n", err.Error())
+						log.Printf("[ERROR] serf handle member update err:%s\n", err.Error())
 					}
 				}
-				s.agents.Store(latest.Id, latest)
+				s.members.Store(latest.Id, latest)
 			}
 
 		case serf.EventMemberLeave, serf.EventMemberFailed:
 			for _, member := range e.(serf.MemberEvent).Members {
 				addr := fmt.Sprintf("%s:%d", member.Addr, member.Port)
-				latest := newSimpleAgent(member.Name, addr, addr)
+				latest := newSimpleMember(member.Name, addr, addr)
 				latest.SetTags(member.Tags)
 
-				s.agents.Delete(latest.Id)
+				s.members.Delete(latest.Id)
 				if s.handler != nil {
-					if err := s.handler.OnAgentLeave(latest); err != nil {
-						log.Printf("[ERROR] serf handle agent leave err:%s\n", err.Error())
+					if err := s.handler.OnMemberLeave(latest); err != nil {
+						log.Printf("[ERROR] serf handle member leave err:%s\n", err.Error())
 					}
 				}
 			}

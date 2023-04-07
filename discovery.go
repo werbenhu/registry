@@ -1,15 +1,15 @@
 package srouter
 
 type Handler interface {
-	OnAgentJoin(*Agent) error
-	OnAgentLeave(*Agent) error
-	OnAgentUpdate(*Agent) error
+	OnMemberJoin(*Member) error
+	OnMemberLeave(*Member) error
+	OnMemberUpdate(*Member) error
 }
 
 type Discovery interface {
 	SetHandler(Handler)
-	Agents() []*Agent
-	LocalAgent() *Agent
+	Members() []*Member
+	LocalMember() *Member
 	Start() error
 	Stop()
 }

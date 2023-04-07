@@ -39,8 +39,8 @@ func (h *Http) match(c *gin.Context) {
 		return
 	}
 
-	agent := &Agent{}
-	if err := agent.Unmarshal(payload); err != nil {
+	m := &Member{}
+	if err := m.Unmarshal(payload); err != nil {
 		c.JSON(http.StatusOK, gin.H{
 			"code": 3,
 			"msg":  err.Error(),
@@ -52,7 +52,7 @@ func (h *Http) match(c *gin.Context) {
 		"code": 0,
 		"msg":  "success",
 		"data": gin.H{
-			"service": agent.Service,
+			"service": m.Service,
 		},
 	})
 }
@@ -71,9 +71,9 @@ func (h *Http) members(c *gin.Context) {
 	elements := group.GetElements()
 	services := make([]Service, 0)
 	for _, element := range elements {
-		agent := &Agent{}
-		if err := agent.Unmarshal(element.Payload); err == nil {
-			services = append(services, agent.Service)
+		m := &Member{}
+		if err := m.Unmarshal(element.Payload); err == nil {
+			services = append(services, m.Service)
 		}
 	}
 

@@ -8,10 +8,9 @@ import (
 )
 
 const (
-	TagGroup    = "group"
-	TagService  = "service"
-	TagReplicas = "replicas"
-
+	TagGroup        = "group"
+	TagService      = "service"
+	TagReplicas     = "replicas"
 	SRouterName     = "srouter-group"
 	DefaultReplicas = "10000"
 )
@@ -30,7 +29,7 @@ func New(opts []IOption) *SRouter {
 	}
 	s := &SRouter{opt: option}
 
-	s.serf = NewSerf(NewAgent(
+	s.serf = NewSerf(NewMember(
 		s.opt.Id,
 		s.opt.Addr,
 		s.opt.Advertise,
@@ -61,58 +60,58 @@ func (s *SRouter) Close() {
 	s.serf.Stop()
 }
 
-func (s *SRouter) OnAgentJoin(agent *Agent) error {
-	log.Printf("[INFO] a new agent joined, id:%s, addr:%s, group:%s, service:%s\n",
-		agent.Id, agent.Addr, agent.Service.Group, agent.Service.Addr)
-	return s.insert(agent)
+func (s *SRouter) OnMemberJoin(m *Member) error {
+	log.Printf("[INFO] a new member joined, id:%s, addr:%s, group:%s, service:%s\n",
+		m.Id, m.Addr, m.Service.Group, m.Service.Addr)
+	return s.insert(m)
 }
 
-func (s *SRouter) OnAgentLeave(agent *Agent) error {
-	log.Printf("[INFO] a new agent left, id:%s, addr:%s, group:%s, service:%s\n",
-		agent.Id, agent.Addr, agent.Service.Group, agent.Service.Addr)
-	return s.delete(agent)
+func (s *SRouter) OnMemberLeave(m *Member) error {
+	log.Printf("[INFO] a new member left, id:%s, addr:%s, group:%s, service:%s\n",
+		m.Id, m.Addr, m.Service.Group, m.Service.Addr)
+	return s.delete(m)
 }
 
-func (s *SRouter) OnAgentUpdate(agent *Agent) error {
-	log.Printf("[INFO] a new agent updated, id:%s, addr:%s, group:%s, service:%s\n",
-		agent.Id, agent.Addr, agent.Service.Group, agent.Service.Addr)
-	return s.insert(agent)
+func (s *SRouter) OnMemberUpdate(m *Member) error {
+	log.Printf("[INFO] a new member updated, id:%s, addr:%s, group:%s, service:%s\n",
+		m.Id, m.Addr, m.Service.Group, m.Service.Addr)
+	return s.insert(m)
 }
 
-func (s *SRouter) delete(agent *Agent) error {
-	if len(agent.Service.Group) == 0 {
+func (s *SRouter) delete(m *Member) error {
+	if len(m.Service.Group) == 0 {
 		return ErrGroupNameEmpty
 	}
 
-	replicas, err := strconv.Atoi(agent.Replicas)
+	replicas, err := strconv.Atoi(m.Replicas)
 	if err != nil {
 		return ErrReplicasParam
 	}
 
-	group, _ := chash.CreateGroup(agent.Service.Group, replicas)
-	if err := group.Delete(agent.Service.Id); err != nil {
+	group, _ := chash.CreateGroup(m.Service.Group, replicas)
+	if err := group.Delete(m.Service.Id); err != nil {
 		return err
 	}
 	return nil
 }
 
-func (s *SRouter) insert(agent *Agent) error {
-	if len(agent.Service.Group) == 0 {
+func (s *SRouter) insert(m *Member) error {
+	if len(m.Service.Group) == 0 {
 		return ErrGroupNameEmpty
 	}
 
-	replicas, err := strconv.Atoi(agent.Replicas)
+	replicas, err := strconv.Atoi(m.Replicas)
 	if err != nil {
 		return ErrReplicasParam
 	}
 
-	payload, err := agent.Marshal()
+	payload, err := m.Marshal()
 	if err != nil {
 		return err
 	}
 
-	group, _ := chash.CreateGroup(agent.Service.Group, replicas)
-	if err := group.Insert(agent.Service.Id, payload); err != nil {
+	group, _ := chash.CreateGroup(m.Service.Group, replicas)
+	if err := group.Insert(m.Service.Id, payload); err != nil {
 		return err
 	}
 	return nil
@@ -128,11 +127,11 @@ func (s *SRouter) Match(groupName string, key string) (*Service, error) {
 		return nil, err
 	}
 
-	agent := &Agent{}
-	if err := agent.Unmarshal(payload); err != nil {
+	m := &Member{}
+	if err := m.Unmarshal(payload); err != nil {
 		return nil, err
 	}
-	return &agent.Service, nil
+	return &m.Service, nil
 }
 
 func (s *SRouter) Members(groupName string) []*Service {
@@ -145,12 +144,12 @@ func (s *SRouter) Members(groupName string) []*Service {
 	elements := group.GetElements()
 
 	for _, element := range elements {
-		agent := &Agent{}
-		if err := agent.Unmarshal(element.Payload); err != nil {
-			log.Printf("[ERROR] element to agent err:%s\n", err.Error())
+		m := &Member{}
+		if err := m.Unmarshal(element.Payload); err != nil {
+			log.Printf("[ERROR] element to member err:%s\n", err.Error())
 			continue
 		}
-		services = append(services, &agent.Service)
+		services = append(services, &m.Service)
 	}
 	return services
 }

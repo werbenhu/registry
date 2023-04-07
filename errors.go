@@ -18,6 +18,6 @@ func (e err) Error() string {
 }
 
 var (
-	ErrReplicasParam  = err{Code: 10000, Msg: "agent replicas param error"}
-	ErrGroupNameEmpty = err{Code: 10001, Msg: "agent group name empty"}
+	ErrReplicasParam  = err{Code: 10000, Msg: "member replicas param error"}
+	ErrGroupNameEmpty = err{Code: 10001, Msg: "member group name empty"}
 )
