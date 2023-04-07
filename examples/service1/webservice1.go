@@ -46,7 +46,7 @@ func main() {
 
 	// 将当前服务注册到路由服务器
 	reg := register.New(ServiceId, addr, advertise, routers, WebGroup, service)
-	err = reg.Run()
+	err = reg.Start()
 	if err != nil {
 		panic(err)
 	}

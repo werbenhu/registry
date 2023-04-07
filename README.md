@@ -32,7 +32,6 @@ go build -o srouter.exe
   -service string
         对外公布的查询服务器的地址
 ```
-
 ##### 启动路由服务器
 ``` sh
 # 这里演示启动2个，启动数量可以自己根据实际情况定
@@ -53,7 +52,53 @@ go build -o srouter.exe
      -api-addr=":9001" `
      -service="172.16.3.3:9001"
 ```
-##### 注册2个web服务
+#### 如何注册服务
+
+```
+// 将服务注册到路由服务器
+// serviceId: 服务ID
+// addr: 当前本服务需要和路由服务器通信的地址，如果有防火墙，请记得端口需要同时打开tcp和udp
+// advertise: 对外公布的服务发现通信的地址，需要这个参数涉及到网关有端口映射的时候，
+//            比如docker，内部监听的端口是88, 映射到对外则是80
+// routers：路由服务器的地址，服务自动发现的时候，需要注册到路由服务器去，多个用逗号隔开
+// group: 当前服务所属的组
+// serviceAddr: 当前本服务提供服务的地址，比如当前服务是http服务器，那就是http监听的那个地址172.16.3.3:8000
+
+reg := register.New(serviceId, addr, advertise, routers, group, serviceAddr)
+err = reg.Start()
+if err != nil {
+	panic(err)
+}
+```
+
+
+#### 如何分配服务
+```
+// 路由服务器中任意选择一个都可以
+routerService := "172.16.3.3:9001"
+group := "test-group"
+
+// 新建一个RpcClient
+client, err := client.NewRpcClient(routerService)
+if err != nil {
+	panic(err)
+}
+
+// 根据用户ID使用一致性hash分配服务
+service, err := client.Match(groupName, "user-id-1")
+log.Printf("[INFO] match key:%s, serviceId:%s, serviceAddr:%s\n", key, 
+
+// 获取group组所有的服务
+allService, err := client.Members(group)
+if err != nil {
+	log.Printf("[ERROR] get all service err:%s\n", err)
+}
+log.Printf("[INFO] all service:%+v\n", allService)
+```
+
+#### 示例演示
+
+###### 注册两个web服务
 ```sh
 # 注册第1个web服务, 
 # 注册的服务组是webservice-group

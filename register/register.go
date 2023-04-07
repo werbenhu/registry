@@ -31,7 +31,7 @@ func (r *Register) SetHandler(h srouter.Handler) {
 }
 
 // Run将注册本服务到路由服务器，并保持双方的通信
-func (r *Register) Run() error {
+func (r *Register) Start() error {
 	r.serf = srouter.NewSerf(r.member)
 	r.serf.SetHandler(r.handler)
 	return r.serf.Start()
