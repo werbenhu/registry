@@ -12,11 +12,11 @@ import (
 
 func main() {
 	id := flag.String("id", "node1", "")
-	addr := flag.String("addr", "172.16.3.3:7370", "")
-	advertise := flag.String("advertise", "172.16.3.3:7370", "")
+	addr := flag.String("addr", ":7370", "")
+	advertise := flag.String("advertise", ":7370", "")
 	routers := flag.String("routers", "", "")
-	service := flag.String("service", "", "")
-	port := flag.String("api-port", "8080", "")
+	apiAddr := flag.String("api-addr", ":8080", "")
+	apiAdvertise := flag.String("api-advertise", "", "")
 
 	flag.Parse()
 	sigs := make(chan os.Signal, 1)
@@ -32,8 +32,8 @@ func main() {
 		srouter.OptAddr(*addr),
 		srouter.OptAdvertise(*advertise),
 		srouter.OptRouters(*routers),
-		srouter.OptApiPort(*port),
-		srouter.OptService(*service),
+		srouter.OptApiAddr(*apiAddr),
+		srouter.OptService(*apiAdvertise),
 	})
 
 	err := router.Serve()

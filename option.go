@@ -11,7 +11,7 @@ type Option struct {
 	Addr      string
 	Advertise string
 	Routers   string
-	ApiPort   string
+	ApiAddr   string
 	Service   string
 }
 
@@ -25,9 +25,15 @@ func OptId(id string) IOption {
 	}
 }
 
-func OptApiPort(port string) IOption {
+func OptApiAddr(addr string) IOption {
 	return func(o *Option) {
-		o.ApiPort = port
+		o.ApiAddr = addr
+	}
+}
+
+func OptService(addr string) IOption {
+	return func(o *Option) {
+		o.Service = addr
 	}
 }
 
@@ -51,14 +57,6 @@ func OptRouters(routers string) IOption {
 	return func(o *Option) {
 		if routers != "" {
 			o.Routers = routers
-		}
-	}
-}
-
-func OptService(service string) IOption {
-	return func(o *Option) {
-		if service != "" {
-			o.Service = service
 		}
 	}
 }

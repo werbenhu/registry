@@ -1,6 +1,6 @@
 package srouter
 
 type Api interface {
-	Start(port string) error
+	Start(addr string) error
 	Stop()
 }

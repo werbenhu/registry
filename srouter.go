@@ -29,6 +29,14 @@ func New(opts []IOption) *SRouter {
 	}
 	s := &SRouter{opt: option}
 
+	if len(s.opt.Service) == 0 {
+		s.opt.Service = s.opt.ApiAddr
+	}
+
+	if len(s.opt.Advertise) == 0 {
+		s.opt.Advertise = s.opt.Addr
+	}
+
 	s.serf = NewSerf(NewMember(
 		s.opt.Id,
 		s.opt.Addr,
@@ -48,7 +56,7 @@ func (s *SRouter) Serve() error {
 		if err := s.serf.Start(); err != nil {
 			log.Panic(err)
 		}
-		if err := s.api.Start(s.opt.ApiPort); err != nil {
+		if err := s.api.Start(s.opt.Addr); err != nil {
 			log.Panic(err)
 		}
 	}()
