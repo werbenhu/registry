@@ -17,6 +17,22 @@ cd cmd
 go build -o srouter.exe
 ```
 
+##### Usage命令
+```
+  -addr string
+        服务发现通信的地址 (default ":7370")
+  -advertise string
+        对外公布的服务发现通信的地址 (default ":7370")
+  -api-addr string
+        查询服务器的地址 (default ":8080")
+  -id string
+        服务ID，不能为空
+  -routers string
+        路由服务器地址，如果是第一个可以为空，多个用逗号隔开
+  -service string
+        对外公布的查询服务器的地址
+```
+
 ##### 启动路由服务器
 ``` sh
 # 这里演示启动2个，启动数量可以自己根据实际情况定
