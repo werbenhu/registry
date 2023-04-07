@@ -52,10 +52,10 @@ func New(opts []IOption) *SRouter {
 }
 
 func (s *SRouter) Serve() error {
+	if err := s.serf.Start(); err != nil {
+		return err
+	}
 	go func() {
-		if err := s.serf.Start(); err != nil {
-			log.Panic(err)
-		}
 		if err := s.api.Start(s.opt.ApiAddr); err != nil {
 			log.Panic(err)
 		}

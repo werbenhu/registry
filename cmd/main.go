@@ -48,6 +48,7 @@ func main() {
 		log.Fatal(err)
 	}
 
+	log.Printf("[INFO] router start finished.\n")
 	<-done
 	router.Close()
 }

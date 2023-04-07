@@ -107,5 +107,7 @@ func (h *Http) Start(addr string) error {
 
 // 停止http api服务
 func (h *Http) Stop() {
-	h.listener.Close()
+	if h.listener != nil {
+		h.listener.Close()
+	}
 }

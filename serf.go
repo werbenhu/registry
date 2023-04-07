@@ -31,7 +31,6 @@ type Serf struct {
 
 func NewSerf(local *Member) *Serf {
 	s := &Serf{
-		events: make(chan serf.Event, 3),
 		member: local,
 	}
 	return s
@@ -59,15 +58,32 @@ func (s *Serf) SetHandler(h Handler) {
 }
 
 func (s *Serf) Stop() {
-	s.serf.Shutdown()
+	if s.serf != nil {
+		s.serf.Shutdown()
+	}
 	close(s.events)
 }
 
 func (s *Serf) Start() error {
 	var err error
+	var host string
+	var port int
 	cfg := serf.DefaultConfig()
-	cfg.MemberlistConfig.AdvertiseAddr, cfg.MemberlistConfig.AdvertisePort = s.splitHostPort(s.member.Advertise)
-	cfg.MemberlistConfig.BindAddr, cfg.MemberlistConfig.BindPort = s.splitHostPort(s.member.Addr)
+
+	s.events = make(chan serf.Event, 3)
+	host, port, err = s.splitHostPort(s.member.Advertise)
+	if err != nil {
+		return err
+	}
+	cfg.MemberlistConfig.AdvertiseAddr = host
+	cfg.MemberlistConfig.AdvertisePort = port
+
+	host, port, err = s.splitHostPort(s.member.Addr)
+	if err != nil {
+		return err
+	}
+	cfg.MemberlistConfig.BindAddr = host
+	cfg.MemberlistConfig.BindPort = port
 	cfg.EventCh = s.events
 
 	filter := &logutils.LevelFilter{
@@ -106,17 +122,17 @@ func (s *Serf) Join(members []string) error {
 	return err
 }
 
-func (s *Serf) splitHostPort(addr string) (string, int) {
+func (s *Serf) splitHostPort(addr string) (string, int, error) {
 	h, p, err := net.SplitHostPort(addr)
 	if err != nil {
-		log.Fatalf("[ERROR] serf discovery parse addr:%s err:%s", addr, err.Error())
+		return "", -1, ErrParseAddrToHostPort
 	}
 
 	port, err := strconv.Atoi(p)
 	if err != nil {
-		log.Fatalf("[ERROR] serf discovery parse port:%s err:%s", p, err.Error())
+		return "", -1, ErrParsePort
 	}
-	return h, port
+	return h, port, nil
 }
 
 func (s *Serf) Loop() {
