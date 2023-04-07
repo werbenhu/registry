@@ -8,10 +8,10 @@ import (
 )
 
 const (
-	TagGroup        = "group"
-	TagService      = "service"
-	TagReplicas     = "replicas"
-	SRouterName     = "srouter-group"
+	//路由服务默认的组名
+	SRouterName = "srouter-group"
+
+	//一致性哈希，每一个服务需要虚拟成多少份elemnts
 	DefaultReplicas = "10000"
 )
 
@@ -56,7 +56,7 @@ func (s *SRouter) Serve() error {
 		if err := s.serf.Start(); err != nil {
 			log.Panic(err)
 		}
-		if err := s.api.Start(s.opt.Addr); err != nil {
+		if err := s.api.Start(s.opt.ApiAddr); err != nil {
 			log.Panic(err)
 		}
 	}()

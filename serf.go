@@ -15,6 +15,12 @@ import (
 	"github.com/natefinch/lumberjack"
 )
 
+const (
+	TagGroup    = "group"
+	TagService  = "service"
+	TagReplicas = "replicas"
+)
+
 type Serf struct {
 	events  chan serf.Event
 	member  *Member
@@ -153,7 +159,7 @@ func (s *Serf) Loop() {
 		case serf.EventMemberLeave, serf.EventMemberFailed:
 			for _, member := range e.(serf.MemberEvent).Members {
 				addr := fmt.Sprintf("%s:%d", member.Addr, member.Port)
-				latest := newSimpleMember(member.Name, addr, addr)
+				latest := NewSimpleMember(member.Name, addr, addr)
 				latest.SetTags(member.Tags)
 
 				s.members.Delete(latest.Id)

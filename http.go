@@ -8,8 +8,9 @@ import (
 	"github.com/werbenhu/chash"
 )
 
+// http提供http接口给客户端查询服务
 type Http struct {
-	port     string
+	addr     string
 	listener net.Listener
 }
 
@@ -17,6 +18,7 @@ func NewHttp() *Http {
 	return &Http{}
 }
 
+// /match返回根据组名和key来匹配对应的服务
 func (h *Http) match(c *gin.Context) {
 	name := c.Query("group")
 	key := c.Query("key")
@@ -57,6 +59,7 @@ func (h *Http) match(c *gin.Context) {
 	})
 }
 
+// /members返回某个组里面的所有服务
 func (h *Http) members(c *gin.Context) {
 	name := c.Query("group")
 	group, err := chash.GetGroup(name)
@@ -86,21 +89,23 @@ func (h *Http) members(c *gin.Context) {
 	})
 }
 
-func (h *Http) Start(port string) error {
+// 启动http api服务
+func (h *Http) Start(addr string) error {
 	var err error
-	h.port = port
+	h.addr = addr
 
 	r := gin.Default()
 	r.GET("/match", h.match)
 	r.GET("/members", h.members)
 
-	h.listener, err = net.Listen("tcp", ":"+h.port)
+	h.listener, err = net.Listen("tcp", h.addr)
 	if err != nil {
 		return err
 	}
 	return r.RunListener(h.listener)
 }
 
+// 停止http api服务
 func (h *Http) Stop() {
 	h.listener.Close()
 }

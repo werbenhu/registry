@@ -9,7 +9,7 @@ import (
 )
 
 type RpcServer struct {
-	port string
+	addr string
 	rpc  *grpc.Server
 }
 
@@ -66,11 +66,11 @@ func (s *RpcServer) Members(ctx context.Context, req *MembersRequest) (*MembersR
 	}, nil
 }
 
-func (s *RpcServer) Start(port string) error {
+func (s *RpcServer) Start(addr string) error {
 	var err error
 
-	s.port = port
-	listener, err := net.Listen("tcp", ":"+s.port)
+	s.addr = addr
+	listener, err := net.Listen("tcp", s.addr)
 	if err != nil {
 		return err
 	}
