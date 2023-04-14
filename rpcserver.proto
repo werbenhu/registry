@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-option go_package = "/srouter";
+option go_package = "/registry";
 
 message MatchRequest {
   string  group = 1;

@@ -4,13 +4,13 @@
 
 package register
 
-import "github.com/werbenhu/srouter"
+import registry "github.com/werbenhu/registry"
 
 // 注册器：对注册的封装，服务提供者直接使用注册器就可以很容易的注册服务到路由服务器
 type Register struct {
-	serf    srouter.Discovery
-	handler srouter.Handler
-	member  *srouter.Member
+	serf    registry.Discovery
+	handler registry.Handler
+	member  *registry.Member
 }
 
 // 新建一个注册
@@ -21,18 +21,18 @@ type Register struct {
 // group: 服务所属的组
 // service: 服务提供服务的地址
 func New(id string, addr string, advertise string, routers string, group string, service string) *Register {
-	member := srouter.NewMember(id, addr, advertise, routers, group, service)
+	member := registry.NewMember(id, addr, advertise, routers, group, service)
 	return &Register{member: member}
 }
 
 // hander将允许服务监听注册服务器收到的新注册、更新以及删除注册事件
-func (r *Register) SetHandler(h srouter.Handler) {
+func (r *Register) SetHandler(h registry.Handler) {
 	r.handler = h
 }
 
 // Run将注册本服务到路由服务器，并保持双方的通信
 func (r *Register) Start() error {
-	r.serf = srouter.NewSerf(r.member)
+	r.serf = registry.NewSerf(r.member)
 	r.serf.SetHandler(r.handler)
 	return r.serf.Start()
 }

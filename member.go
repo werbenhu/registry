@@ -1,4 +1,4 @@
-package srouter
+package registry
 
 import (
 	"encoding/json"

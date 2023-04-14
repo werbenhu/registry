@@ -2,7 +2,7 @@
 // SPDX-FileCopyrightText: 2023 werbenhu
 // SPDX-FileContributor: werbenhu
 
-package srouter
+package registry
 
 // 自动发现事件通知接口
 type Handler interface {

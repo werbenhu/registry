@@ -7,7 +7,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/werbenhu/srouter"
+	"github.com/werbenhu/registry"
 	"google.golang.org/grpc"
 )
 
@@ -21,7 +21,7 @@ type RpcClient struct {
 	conn *grpc.ClientConn
 
 	// grpc客户端对象
-	router srouter.RouterClient
+	router registry.RouterClient
 }
 
 // 创建一个Grpc客户端对象
@@ -36,7 +36,7 @@ func NewRpcClient(router string) (*RpcClient, error) {
 	}
 
 	client.conn = conn
-	client.router = srouter.NewRouterClient(conn)
+	client.router = registry.NewRouterClient(conn)
 	return client, nil
 }
 
@@ -47,11 +47,11 @@ func (c *RpcClient) Close() {
 
 // 匹配某个key对应的一致性哈希服务
 // group是组名，比如有3个mysql服务器同属一个db组，3个web服务器同属一个web组
-func (c *RpcClient) Match(group string, key string) (*srouter.Service, error) {
+func (c *RpcClient) Match(group string, key string) (*registry.Service, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	service, err := c.router.Match(ctx, &srouter.MatchRequest{
+	service, err := c.router.Match(ctx, &registry.MatchRequest{
 		Group: group,
 		Key:   key,
 	})
@@ -59,16 +59,16 @@ func (c *RpcClient) Match(group string, key string) (*srouter.Service, error) {
 		return nil, err
 	}
 	//服务包含3个属性，服务ID、服务所属的组名以及服务的地址
-	return srouter.NewService(service.Id, service.Group, service.Addr), nil
+	return registry.NewService(service.Id, service.Group, service.Addr), nil
 }
 
 // 列出某个组里所有的服务
-func (c *RpcClient) Members(group string) ([]*srouter.Service, error) {
+func (c *RpcClient) Members(group string) ([]*registry.Service, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	services := make([]*srouter.Service, 0)
-	members, err := c.router.Members(ctx, &srouter.MembersRequest{
+	services := make([]*registry.Service, 0)
+	members, err := c.router.Members(ctx, &registry.MembersRequest{
 		Group: group,
 	})
 	if err != nil {
@@ -76,7 +76,7 @@ func (c *RpcClient) Members(group string) ([]*srouter.Service, error) {
 	}
 
 	for _, member := range members.Services {
-		services = append(services, srouter.NewService(member.Id, member.Group, member.Addr))
+		services = append(services, registry.NewService(member.Id, member.Group, member.Addr))
 	}
 	return services, nil
 }

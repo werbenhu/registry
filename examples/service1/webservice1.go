@@ -9,7 +9,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/werbenhu/srouter/register"
+	"github.com/werbenhu/registry/register"
 )
 
 var (

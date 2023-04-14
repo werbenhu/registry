@@ -1,4 +1,4 @@
-module github.com/werbenhu/srouter
+module github.com/werbenhu/registry
 
 go 1.20
 

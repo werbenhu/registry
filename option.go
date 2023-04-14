@@ -1,4 +1,4 @@
-package srouter
+package registry
 
 import (
 	"os"
@@ -7,12 +7,12 @@ import (
 )
 
 type Option struct {
-	Id        string
-	Addr      string
-	Advertise string
-	Routers   string
-	ApiAddr   string
-	Service   string
+	Id         string
+	Addr       string
+	Advertise  string
+	Registries string
+	ApiAddr    string
+	Service    string
 }
 
 type IOption func(o *Option)
@@ -53,10 +53,10 @@ func OptAddr(addr string) IOption {
 	}
 }
 
-func OptRouters(routers string) IOption {
+func OptRegistries(registries string) IOption {
 	return func(o *Option) {
-		if routers != "" {
-			o.Routers = routers
+		if registries != "" {
+			o.Registries = registries
 		}
 	}
 }

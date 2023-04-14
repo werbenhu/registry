@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/werbenhu/srouter/client"
+	"github.com/werbenhu/registry/client"
 )
 
 func main() {

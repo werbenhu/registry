@@ -4,7 +4,7 @@
 // 	protoc        v3.21.9
 // source: rpcserver.proto
 
-package srouter
+package registry
 
 import (
 	context "context"

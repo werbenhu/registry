@@ -1,5 +1,5 @@
-# SRouter
-**一个用纯Go语言写的一致性哈希路由服务器，支持自动发现。**
+# registry
+**一个简单的注册服务器，使用一致性哈希算法进行服务发现。**
 
 ## 什么是一致性哈希
 
@@ -14,7 +14,7 @@
 ### 编译路由服务
 ```sh
 cd cmd 
-go build -o srouter.exe
+go build -o registry.exe
 ```
 
 ### Usage命令
@@ -27,8 +27,8 @@ go build -o srouter.exe
         查询服务器的地址 (default ":8080")
   -id string
         服务ID，不能为空
-  -routers string
-        路由服务器地址，如果是第一个可以为空，多个用逗号隔开
+  -registries string
+        注册服务器地址，如果是第一个可以为空，多个用逗号隔开
   -service string
         对外公布的查询服务器的地址
 ```
@@ -36,19 +36,19 @@ go build -o srouter.exe
 ``` sh
 # 这里演示启动2个，启动数量可以自己根据实际情况定
 # 启动第1个
-./srouter.exe -addr=":7370" `
+./registry.exe -addr=":7370" `
      -advertise="172.16.3.3:7370" `
-     -id=router-service-1 `
+     -id=service-1 `
      -api-addr=":9000" `
      -service="172.16.3.3:9000"
 
 # 启动第2个
 # 第2个多一个参数-routers="172.16.3.3:7370"
 # 这里是需要将第2个注册到第1个去
-./srouter.exe -addr=":7371" `
+./registry.exe -addr=":7371" `
      -advertise="172.16.3.3:7371" `
-     -id=router-service-2 `
-     -routers="172.16.3.3:7370" `
+     -id=service-2 `
+     -registries="172.16.3.3:7370" `
      -api-addr=":9001" `
      -service="172.16.3.3:9001"
 ```
@@ -60,11 +60,11 @@ go build -o srouter.exe
 // addr: 当前本服务需要和路由服务器通信的地址，如果有防火墙，请记得端口需要同时打开tcp和udp
 // advertise: 对外公布的服务发现通信的地址，需要这个参数涉及到网关有端口映射的时候，
 //            比如docker，内部监听的端口是88, 映射到对外则是80
-// routers：路由服务器的地址，服务自动发现的时候，需要注册到路由服务器去，多个用逗号隔开
+// registries：路由服务器的地址，服务自动发现的时候，需要注册到路由服务器去，多个用逗号隔开
 // group: 当前服务所属的组
 // serviceAddr: 当前本服务提供服务的地址，比如当前服务是http服务器，那就是http监听的那个地址172.16.3.3:8000
 
-reg := register.New(serviceId, addr, advertise, routers, group, serviceAddr)
+reg := register.New(serviceId, addr, advertise, registries, group, serviceAddr)
 err = reg.Start()
 if err != nil {
 	panic(err)
@@ -75,11 +75,11 @@ if err != nil {
 ## 如何分配服务
 ```
 // 路由服务器中任意选择一个都可以
-routerService := "172.16.3.3:9001"
+registryAddr := "172.16.3.3:9001"
 group := "test-group"
 
 // 新建一个RpcClient
-client, err := client.NewRpcClient(routerService)
+client, err := client.NewRpcClient(registryAddr)
 if err != nil {
 	panic(err)
 }

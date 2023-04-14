@@ -2,7 +2,7 @@
 // SPDX-FileCopyrightText: 2023 werbenhu
 // SPDX-FileContributor: werbenhu
 
-package srouter
+package registry
 
 type err struct {
 	Msg  string
