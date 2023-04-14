@@ -128,7 +128,7 @@ func (s *Registry) insert(m *Member) error {
 	}
 
 	group, _ := chash.CreateGroup(m.Service.Group, replicas)
-	if err := group.Insert(m.Service.Id, payload); err != nil {
+	if err := group.Upsert(m.Service.Id, payload); err != nil {
 		return err
 	}
 	return nil
