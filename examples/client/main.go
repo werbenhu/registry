@@ -9,7 +9,7 @@ import (
 
 func main() {
 	// registry server address
-	registryAddr := "172.16.3.3:9001"
+	registryAddr := "172.16.3.3:9801"
 	group := "webservice-group"
 
 	client, err := client.NewRpcClient(registryAddr)
