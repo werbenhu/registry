@@ -16,19 +16,39 @@ import (
 )
 
 const (
-	TagGroup    = "group"
-	TagAddr     = "addr"
+	// tag key of group name
+	TagGroup = "group"
+
+	// tag key of service address
+	TagAddr = "addr"
+
+	// tag key of replicas
 	TagReplicas = "replicas"
 )
 
 type Serf struct {
-	events  chan serf.Event
-	member  *Member
-	serf    *serf.Serf
+
+	// Event is a generic interface for exposing Serf events
+	// Clients will usually need to use a type switches to get
+	// to a more useful type
+	events chan serf.Event
+
+	// local member of current registry server
+	member *Member
+
+	// Serf is a single node that is part of a single cluster that gets
+	// events about joins/leaves/failures/etc. It is created with the Create
+	// method.
+	serf *serf.Serf
+
+	// Auto-discover event notification interface
 	handler Handler
+
+	// Members of all services
 	members sync.Map
 }
 
+// NewSerf create a discovery instance of hashicorp/serf
 func NewSerf(local *Member) *Serf {
 	s := &Serf{
 		member: local,
@@ -36,6 +56,7 @@ func NewSerf(local *Member) *Serf {
 	return s
 }
 
+// LocalMember get current registry service
 func (s *Serf) LocalMember() *Member {
 	node, ok := s.members.Load(s.member.Id)
 	if !ok {
@@ -44,6 +65,7 @@ func (s *Serf) LocalMember() *Member {
 	return node.(*Member)
 }
 
+// Members get members of all services
 func (s *Serf) Members() []*Member {
 	nodes := make([]*Member, 0)
 	s.members.Range(func(key any, val any) bool {
@@ -53,6 +75,7 @@ func (s *Serf) Members() []*Member {
 	return nodes
 }
 
+// Set event processing handler when new services are discovered
 func (s *Serf) SetHandler(h Handler) {
 	s.handler = h
 }
@@ -64,6 +87,7 @@ func (s *Serf) Stop() {
 	close(s.events)
 }
 
+// Start hashicorp/serf agent
 func (s *Serf) Start() error {
 	var err error
 	var host string
@@ -117,11 +141,13 @@ func (s *Serf) Start() error {
 	return nil
 }
 
+// Join joins an existing Serf cluster.
 func (s *Serf) Join(members []string) error {
 	_, err := s.serf.Join(members, true)
 	return err
 }
 
+// Split address into host names and ports
 func (s *Serf) splitHostPort(addr string) (string, int, error) {
 	h, p, err := net.SplitHostPort(addr)
 	if err != nil {
@@ -135,6 +161,7 @@ func (s *Serf) splitHostPort(addr string) (string, int, error) {
 	return h, port, nil
 }
 
+// Loop read the exposing Serf events and pass events to the handler
 func (s *Serf) Loop() {
 	for e := range s.events {
 		switch e.EventType() {
