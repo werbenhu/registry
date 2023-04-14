@@ -17,7 +17,7 @@ func main() {
 	id := flag.String("id", "", "The service id, cannot be empty")
 	bind := flag.String("bind", ":7370", "The address used to register the service (default \":7370\").")
 	bindAdvertise := flag.String("bind-advertise", ":7370", "The address will advertise to other services (default \":7370\").")
-	registries := flag.String("registries", "", " Registry server addresses, it can be empty, and multiples are separated by commas.")
+	registries := flag.String("registries", "", "Registry server addresses, it can be empty, and multiples are separated by commas.")
 	addr := flag.String("addr", ":9800", "The address used for service discovery (default \":9800\").")
 	advertise := flag.String("advertise", "", "The address will advertise to client for service discover (default \":9800\").")
 
