@@ -2,16 +2,17 @@
 // SPDX-FileCopyrightText: 2023 werbenhu
 // SPDX-FileContributor: werbenhu
 
-package registry
+package test
 
 import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+	"github.com/werbenhu/registry"
 )
 
 func TestErrString(t *testing.T) {
-	c := err{
+	c := registry.Err{
 		Msg:  "test",
 		Code: 0x1,
 	}
@@ -20,7 +21,7 @@ func TestErrString(t *testing.T) {
 }
 
 func TestErrErrorr(t *testing.T) {
-	c := err{
+	c := registry.Err{
 		Msg:  "error",
 		Code: 0x1,
 	}

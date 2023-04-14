@@ -4,23 +4,23 @@
 
 package registry
 
-type err struct {
+type Err struct {
 	Msg  string
 	Code int
 }
 
-func (e err) String() string {
+func (e Err) String() string {
 	return e.Msg
 }
 
-func (e err) Error() string {
+func (e Err) Error() string {
 	return e.Msg
 }
 
 var (
-	ErrMemberIdEmpty       = err{Code: 10000, Msg: "id can't be empty"}
-	ErrReplicasParam       = err{Code: 10000, Msg: "member replicas param error"}
-	ErrGroupNameEmpty      = err{Code: 10001, Msg: "member group name empty"}
-	ErrParseAddrToHostPort = err{Code: 10002, Msg: "parse addr to host and port error"}
-	ErrParsePort           = err{Code: 10003, Msg: "parse port error"}
+	ErrMemberIdEmpty       = Err{Code: 10000, Msg: "id can't be empty"}
+	ErrReplicasParam       = Err{Code: 10000, Msg: "member replicas param error"}
+	ErrGroupNameEmpty      = Err{Code: 10001, Msg: "member group name empty"}
+	ErrParseAddrToHostPort = Err{Code: 10002, Msg: "parse addr to host and port error"}
+	ErrParsePort           = Err{Code: 10003, Msg: "parse port error"}
 )
