@@ -1,94 +1,124 @@
-# registry
-**一个简单的注册服务器，使用一致性哈希算法进行服务发现。**
+# Registry
+**A simple registry server to discover your services, it uses consistent hashing algorithm for service discovery.**
 
-## 什么是一致性哈希
+## What is consistent hashing
 
-> 百度百科：一种特殊的哈希算法，目的是解决分布式缓存的问题。在移除或者添加一个服务器时，能够尽可能小地改变已存在的服务请求与处理请求服务器之间的映射关系。一致性哈希解决了简单哈希算法在分布式哈希表中存在的动态伸缩等问题。
+> Consistent hashing is a hashing technique that performs really well when operated in a dynamic environment where the distributed system scales up and scales down frequently. 
 
-假设有1000万个用户，100个服务器node，请设计一种算法合理地将用户分配到这些服务器上。普通的哈希算法是将1000万个用户各自的userid计算出hash值，取余100，然后选择对应编号的服务器。由于该算法使用节点数取余的方法，强依赖node的数目，当node数发生变化的时候，比如100个服务器有5个宕机了，现在只剩95个。这时候每个用户都需要重新分配服务器，1000万个用户的id计算出hash值，取余95，大部分用户所属的服务都要变更。
+### The problem of naive hashing function
 
-**一致性哈希主要解决的问题就是：当node数发生变化时，能够尽量少的移动数据。**
+A naive hashing function is key % n where n is the number of servers.
+It has two major drawbacks:
+1. NOT horizontally scalable, or in other words, NOT partition tolerant. When you add new servers, all existing mapping are broken. It could introduce painful maintenance work and downtime to the system.
+2. May NOT be load balanced. If the data is not uniformly distributed, this might cause some servers to be hot and saturated while others idle and almost empty.
 
-## 如何运行
+Problem 2 can be resolved by hashing the key first, hash(key) % n, so that the hashed keys will be likely to be distributed more evenly. But this can't solve the problem 1. We need to find a solution that can distribute the keys and is not dependent on n.
 
-### 编译路由服务
+### Consistent Hashing
+Consistent Hashing allows distributing data in such a way that minimize reorganization when nodes are added or removed, hence making the system easier to scale up or down.
+
+The key idea is that it's a distribution scheme that DOES NOT depend directly on the number of servers.
+
+In Consistent Hashing, when the hash table is resized, in general only k / n keys need to be remapped, where k is the total number of keys and n is the total number of servers.
+
+When a new node is added, it takes shares from a few hosts without touching other's shares
+When a node is removed, its shares are shared by other hosts.
+
+## Getting started
+
+### Build registry
 ```sh
 cd cmd 
-go build -o registry.exe
+go build -o registry
 ```
 
-### Usage命令
+### Usage
 ```
+   -id string
+        Service ID, cannot be empty
+  -bind string
+        The address that the registry server used to communicate with other services  (default ":7370").
+  -bind-advertise string
+        The address that the registry server will advertise to other services (default ":7370").
   -addr string
-        服务发现通信的地址 (default ":7370")
+        The address used to discover the service for client (default ":8080").
   -advertise string
-        对外公布的服务发现通信的地址 (default ":7370")
-  -api-addr string
-        查询服务器的地址 (default ":8080")
-  -id string
-        服务ID，不能为空
+        The address that the registry server will advertise to client for discovery (default ":8080").
   -registries string
-        注册服务器地址，如果是第一个可以为空，多个用逗号隔开
-  -service string
-        对外公布的查询服务器的地址
+        Registry server address, if it is the first one, it can be empty, and multiples are separated by commas.
+  
 ```
-## 启动路由服务器
+## Starting registry server
+
+Here is an example, start 2 registry server nodes, the number of starts can be determined according to the actual situation.
+
+
 ``` sh
-# 这里演示启动2个，启动数量可以自己根据实际情况定
-# 启动第1个
-./registry.exe -addr=":7370" `
+# starting the first node
+./registry -addr=":7370" `
      -advertise="172.16.3.3:7370" `
      -id=service-1 `
      -api-addr=":9000" `
      -service="172.16.3.3:9000"
 
-# 启动第2个
-# 第2个多一个参数-routers="172.16.3.3:7370"
-# 这里是需要将第2个注册到第1个去
-./registry.exe -addr=":7371" `
+# starting the second node
+# The second one has one more parameter -registries="172.16.3.3:7370",
+# this is because the second one needs to be registered to the first one
+./registry -addr=":7371" `
      -advertise="172.16.3.3:7371" `
      -id=service-2 `
      -registries="172.16.3.3:7370" `
      -api-addr=":9001" `
      -service="172.16.3.3:9001"
 ```
-## 如何注册服务
+
+## Register services
 
 ```
-// 将服务注册到路由服务器
-// serviceId: 服务ID
-// addr: 当前本服务需要和路由服务器通信的地址，如果有防火墙，请记得端口需要同时打开tcp和udp
-// advertise: 对外公布的服务发现通信的地址，需要这个参数涉及到网关有端口映射的时候，
-//            比如docker，内部监听的端口是88, 映射到对外则是80
-// registries：路由服务器的地址，服务自动发现的时候，需要注册到路由服务器去，多个用逗号隔开
-// group: 当前服务所属的组
-// serviceAddr: 当前本服务提供服务的地址，比如当前服务是http服务器，那就是http监听的那个地址172.16.3.3:8000
+// Register services
 
-reg := register.New(serviceId, addr, advertise, registries, group, serviceAddr)
-err = reg.Start()
+// serviceId: service ID
+// bind: 
+//    The current service needs to communicate with the address of the registry server. 
+//    If there is a firewall, please remember that the port needs to open both tcp and udp.
+// bindAdvertise: 
+//    The address that the service will advertise to registry server. 
+//    Can be used for basic NAT traversal where both the internal ip:port and external ip:port are known.
+// registries:
+//    The addresses of the registry server, if there are more than one, separate them with commas, 
+//    such as "192.168.1.101:7370,192.168.1.102:7370"
+// group: 
+//    Group name the current service belongs to.
+// addr: 
+//    The address currently provided by this service to the client, 
+//    for example, the current service is an http server, 
+//    that is the address 172.16.3.3:80 that http listens to.
+
+r := register.New(serviceId, bind, bindAdvertise, registries, group, addr)
+err = r.Start()
 if err != nil {
 	panic(err)
 }
 ```
 
 
-## 如何分配服务
+## Service Discovery
 ```
-// 路由服务器中任意选择一个都可以
+// You can choose any one of the registered servers.
 registryAddr := "172.16.3.3:9001"
 group := "test-group"
 
-// 新建一个RpcClient
+// Create a new RpcClient
 client, err := client.NewRpcClient(registryAddr)
 if err != nil {
 	panic(err)
 }
 
-// 根据用户ID使用一致性hash分配服务
+// Use consistent hash to assign services based on user ID
 service, err := client.Match(groupName, "user-id-1")
 log.Printf("[INFO] match key:%s, serviceId:%s, serviceAddr:%s\n", key, service.Id, service.Addr)
 
-// 获取group组所有的服务
+// Get all services of the group
 allService, err := client.Members(group)
 if err != nil {
 	log.Printf("[ERROR] get all service err:%s\n", err)
@@ -96,31 +126,34 @@ if err != nil {
 log.Printf("[INFO] all service:%+v\n", allService)
 ```
 
-## 示例演示
+## Examples
 
-### 注册两个web服务
+### Register two web services.
 ```sh
-# 注册第1个web服务, 
-# 注册的服务组是webservice-group
-# 注册的服务ID是webserver1
-# 注册的服务地址是172.16.3.3:8000
+# Register the first web service, 
+# The service group is webservice-group,
+# The service ID is webserver1
+# The web service address is 172.16.3.3:8000
 cd examples/service1
-go build -o webservice1.exe webservice1.go 
-./webservice1.exe
+go build -o webservice1 webservice1.go 
+./webservice1
 
-# 注册第2个web服务
-# 注册的服务组是webservice-group
-# 注册的服务ID是webserver2
-# 注册的服务地址是172.16.3.3:8001
+# Register the second web service, 
+# The service group is webservice-group,
+# The service ID is webserver2
+# The web service address is 172.16.3.3:8001
 cd examples/service2
-go build -o webservice2.exe webservice2.go
-./webservice2.exe
+go build -o webservice2 webservice2.go
+./webservice2
 ```
 
-### 客户端使用一致性哈希选择服务
+### Client discovery service
 ```sh
 cd examples/client
-go build -o client.exe main.go
-./client.exe
+go build -o client main.go
+./client
 ```
+
+## Contributions
+Contributions and feedback are both welcomed and encouraged! Open an [issue](https://github.com/werbenhu/registry/issues) to report a bug, ask a question, or make a feature request.
 
