@@ -84,7 +84,9 @@ func (s *Serf) Stop() {
 	if s.serf != nil {
 		s.serf.Shutdown()
 	}
-	close(s.events)
+	if s.events != nil {
+		close(s.events)
+	}
 }
 
 // Start hashicorp/serf agent

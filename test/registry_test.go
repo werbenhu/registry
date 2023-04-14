@@ -8,7 +8,7 @@ import (
 	"github.com/werbenhu/registry"
 )
 
-func Test_registryNew(t *testing.T) {
+func Test_RegistryNew(t *testing.T) {
 	r := registry.New([]registry.IOption{
 		registry.OptId("testid"),
 		registry.OptBind("127.0.0.1:7370"),
@@ -17,11 +17,11 @@ func Test_registryNew(t *testing.T) {
 		registry.OptAddr("127.0.0.1:9000"),
 		registry.OptAdvertise("127.0.0.1:9000"),
 	})
-
 	assert.NotNil(t, r)
+	r.Close()
 }
 
-func Test_registryServe(t *testing.T) {
+func Test_RegistryServe(t *testing.T) {
 	r := registry.New([]registry.IOption{
 		registry.OptId("testid"),
 		registry.OptBind("127.0.0.1:7370"),
@@ -35,7 +35,7 @@ func Test_registryServe(t *testing.T) {
 	r.Close()
 }
 
-func Test_registryServeErr(t *testing.T) {
+func Test_RegistryServeErr(t *testing.T) {
 	r := registry.New([]registry.IOption{
 		registry.OptId("testid"),
 		registry.OptBind("127.0.0.1:abcd"),
@@ -50,7 +50,7 @@ func Test_registryServeErr(t *testing.T) {
 	r.Close()
 }
 
-func Test_registryOnMemberJoin(t *testing.T) {
+func Test_RegistryOnMemberJoin(t *testing.T) {
 	r := registry.New([]registry.IOption{
 		registry.OptId("testid"),
 		registry.OptBind("127.0.0.1:7370"),
@@ -83,9 +83,10 @@ func Test_registryOnMemberJoin(t *testing.T) {
 	assert.Equal(t, serviceId, service.Id)
 	assert.Equal(t, serviceGroup, service.Group)
 	assert.Equal(t, serviceAddr, service.Addr)
+	r.Close()
 }
 
-func Test_registryOnMemberLeave(t *testing.T) {
+func Test_RegistryOnMemberLeave(t *testing.T) {
 	r := registry.New([]registry.IOption{
 		registry.OptId("testid"),
 		registry.OptBind("127.0.0.1:7370"),
@@ -118,9 +119,10 @@ func Test_registryOnMemberLeave(t *testing.T) {
 	service, err := r.Match(serviceGroup, "xxx")
 	assert.Nil(t, service)
 	assert.Equal(t, chash.ErrNoResultMatched, err)
+	r.Close()
 }
 
-func Test_registryOnMemberUpdate(t *testing.T) {
+func Test_RegistryOnMemberUpdate(t *testing.T) {
 	r := registry.New([]registry.IOption{
 		registry.OptId("testid"),
 		registry.OptBind("127.0.0.1:7370"),
@@ -161,9 +163,10 @@ func Test_registryOnMemberUpdate(t *testing.T) {
 	assert.Equal(t, serviceId, service.Id)
 	assert.Equal(t, serviceGroup, service.Group)
 	assert.Equal(t, "127.0.0.1:81", service.Addr)
+	r.Close()
 }
 
-func Test_SRouteMatch(t *testing.T) {
+func Test_RegistryMatch(t *testing.T) {
 	r := registry.New([]registry.IOption{
 		registry.OptId("testid"),
 		registry.OptBind("127.0.0.1:7370"),
@@ -212,11 +215,13 @@ func Test_SRouteMatch(t *testing.T) {
 	assert.Equal(t, "testid2", service.Id)
 	assert.Equal(t, serviceGroup, service.Group)
 	assert.Equal(t, "127.0.0.1:81", service.Addr)
+	r.Close()
 }
 
-func Test_SRouteMembers(t *testing.T) {
+func Test_RegistryMembers(t *testing.T) {
+
 	r := registry.New([]registry.IOption{
-		registry.OptId("testid"),
+		registry.OptId("registy-id"),
 		registry.OptBind("127.0.0.1:7370"),
 		registry.OptBindAdvertise("127.0.0.1:7370"),
 		registry.OptRegistries(""),
@@ -227,7 +232,6 @@ func Test_SRouteMembers(t *testing.T) {
 	assert.Nil(t, err)
 
 	serviceGroup := "testgroup"
-	serviceAddr := "127.0.0.1:80"
 
 	member1 := registry.NewMember(
 		"testid1",
@@ -235,7 +239,7 @@ func Test_SRouteMembers(t *testing.T) {
 		"127.0.0.1:8370",
 		"127.0.0.1:7370",
 		serviceGroup,
-		serviceAddr,
+		"127.0.0.1:80",
 	)
 	err = r.OnMemberJoin(member1)
 	assert.Nil(t, err)
@@ -246,7 +250,7 @@ func Test_SRouteMembers(t *testing.T) {
 		"127.0.0.1:8371",
 		"127.0.0.1:7371",
 		serviceGroup,
-		serviceAddr,
+		"127.0.0.1:81",
 	)
 	err = r.OnMemberJoin(member2)
 	assert.Nil(t, err)
@@ -258,4 +262,5 @@ func Test_SRouteMembers(t *testing.T) {
 	assert.EqualValues(t, []*registry.Service{
 		&member1.Service, &member2.Service,
 	}, services)
+	r.Close()
 }

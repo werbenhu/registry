@@ -9,7 +9,7 @@ require (
 	github.com/natefinch/lumberjack v2.0.0+incompatible
 	github.com/rs/xid v1.4.0
 	github.com/stretchr/testify v1.8.2
-	github.com/werbenhu/chash v1.0.6
+	github.com/werbenhu/chash v1.0.8
 	google.golang.org/grpc v1.54.0
 	google.golang.org/protobuf v1.28.1
 )

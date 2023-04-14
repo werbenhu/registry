@@ -68,8 +68,13 @@ func (s *Registry) Serve() error {
 
 // Close will close the registry server
 func (s *Registry) Close() {
-	s.api.Stop()
-	s.serf.Stop()
+	if s.serf != nil {
+		s.serf.Stop()
+	}
+	if s.api != nil {
+		s.api.Stop()
+	}
+	chash.RemoveAllGroup()
 }
 
 // OnMemberJoin triggered when a new service is registered
