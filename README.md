@@ -37,13 +37,13 @@ go build -o registry
    -id string
         Service ID, cannot be empty
   -bind string
-        The address that the registry server used to communicate with other services  (default ":7370").
+        The address that the registry server used to communicate with other services (default ":7370").
   -bind-advertise string
         The address that the registry server will advertise to other services (default ":7370").
   -addr string
-        The address used to discover the service for client (default ":8080").
+        The address used for service discovery (default ":8080").
   -advertise string
-        The address that the registry server will advertise to client for discovery (default ":8080").
+        The address that the registry server will advertise to client for service discover (default ":8080").
   -registries string
         Registry server address, if it is the first one, it can be empty, and multiples are separated by commas.
   
@@ -55,29 +55,27 @@ Here is an example, start 2 registry server nodes, the number of starts can be d
 
 ``` sh
 # starting the first node
-./registry -addr=":7370" `
-     -advertise="172.16.3.3:7370" `
-     -id=service-1 `
-     -api-addr=":9000" `
-     -service="172.16.3.3:9000"
+./registry -bind=":7370" \
+     -bind-advertise="172.16.3.3:7370" \
+     -id=service-1 \
+     -addr=":9000" \
+     -advertise="172.16.3.3:9000"
 
 # starting the second node
 # The second one has one more parameter -registries="172.16.3.3:7370",
 # this is because the second one needs to be registered to the first one
-./registry -addr=":7371" `
-     -advertise="172.16.3.3:7371" `
-     -id=service-2 `
-     -registries="172.16.3.3:7370" `
-     -api-addr=":9001" `
-     -service="172.16.3.3:9001"
+./registry -bind=":7371" \
+     -bind-advertise="172.16.3.3:7371" \
+     -id=service-2 \
+     -registries="172.16.3.3:7370" \
+     -addr=":9001" \
+     -advertise="172.16.3.3:9001"
 ```
 
 ## Register services
 
 ```
-// Register services
-
-// serviceId: service ID
+// id: service ID
 // bind: 
 //    The current service needs to communicate with the address of the registry server. 
 //    If there is a firewall, please remember that the port needs to open both tcp and udp.
@@ -94,7 +92,7 @@ Here is an example, start 2 registry server nodes, the number of starts can be d
 //    for example, the current service is an http server, 
 //    that is the address 172.16.3.3:80 that http listens to.
 
-r := register.New(serviceId, bind, bindAdvertise, registries, group, addr)
+r := register.New(id, bind, bindAdvertise, registries, group, addr)
 err = r.Start()
 if err != nil {
 	panic(err)
