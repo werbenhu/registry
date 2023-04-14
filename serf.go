@@ -17,7 +17,7 @@ import (
 
 const (
 	TagGroup    = "group"
-	TagService  = "service"
+	TagAddr     = "addr"
 	TagReplicas = "replicas"
 )
 
@@ -78,7 +78,7 @@ func (s *Serf) Start() error {
 	cfg.MemberlistConfig.AdvertiseAddr = host
 	cfg.MemberlistConfig.AdvertisePort = port
 
-	host, port, err = s.splitHostPort(s.member.Addr)
+	host, port, err = s.splitHostPort(s.member.Bind)
 	if err != nil {
 		return err
 	}
@@ -109,9 +109,9 @@ func (s *Serf) Start() error {
 	}
 
 	go s.Loop()
-	log.Printf("[INFO] serf discovery started, current member addr:%s, advertise addr:%s\n", s.member.Addr, s.member.Advertise)
-	if len(s.member.Routers) > 0 {
-		members := strings.Split(s.member.Routers, ",")
+	log.Printf("[INFO] serf discovery started, current service bind:%s, advertise addr:%s\n", s.member.Bind, s.member.Advertise)
+	if len(s.member.Registries) > 0 {
+		members := strings.Split(s.member.Registries, ",")
 		s.Join(members)
 	}
 	return nil

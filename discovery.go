@@ -4,32 +4,34 @@
 
 package registry
 
-// 自动发现事件通知接口
+// Auto-discover event notification interface
 type Handler interface {
-	// 当有新服务注册过来的时候会触发
+
+	// Triggered when a new service is registered
 	OnMemberJoin(*Member) error
 
-	// 当有新服务离开的时候会触发
+	// Triggered when a new service leaves
 	OnMemberLeave(*Member) error
 
-	// 当有新服务更新的时候会触发
+	// Triggered when a service is updated
 	OnMemberUpdate(*Member) error
 }
 
-// 自动发现接口
+// Auto-discover interface
 type Discovery interface {
-	// 设置服务发现事件处理接口
+
+	// Set event processing handler when new services are discovered
 	SetHandler(Handler)
 
-	//获取所有服务列表
+	// Get members of all registry services
 	Members() []*Member
 
-	//获取当前自身服务
+	// Get current registry service
 	LocalMember() *Member
 
-	//启动发现服务
+	// Start the discovery service
 	Start() error
 
-	//停止服务
+	// Stop the discovery service
 	Stop()
 }

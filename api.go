@@ -4,8 +4,14 @@
 
 package registry
 
-// 路由服务器提供查询服务的接口
+// Api is an api interface for service discovery
 type Api interface {
+
+	// Start the discovery server
+	// addr:
+	//	the addr that discovery server listens to
 	Start(addr string) error
+
+	// Stop the discovery server
 	Stop()
 }

@@ -41,9 +41,9 @@ go build -o registry
   -bind-advertise string
         The address will advertise to other services (default ":7370").
   -addr string
-        The address used for service discovery (default ":8080").
+        The address used for service discovery (default ":9800").
   -advertise string
-        The address will advertise to client for service discover (default ":8080").
+        The address will advertise to client for service discover (default ":9800").
   -registries string
         Registry server addresses, it can be empty, and multiples are separated by commas.
   
@@ -58,8 +58,8 @@ Here is an example, start 2 registry server nodes, the number of starts can be d
 ./registry -bind=":7370" \
      -bind-advertise="172.16.3.3:7370" \
      -id=service-1 \
-     -addr=":9000" \
-     -advertise="172.16.3.3:9000"
+     -addr=":9800" \
+     -advertise="172.16.3.3:9800"
 
 # starting the second node
 # The second one has one more parameter -registries="172.16.3.3:7370",
@@ -68,18 +68,19 @@ Here is an example, start 2 registry server nodes, the number of starts can be d
      -bind-advertise="172.16.3.3:7371" \
      -id=service-2 \
      -registries="172.16.3.3:7370" \
-     -addr=":9001" \
-     -advertise="172.16.3.3:9001"
+     -addr=":9801" \
+     -advertise="172.16.3.3:9801"
 ```
 
 ## Register services
 
 ```
-// id: service ID
+// id: 
+//    service ID
 // bind: 
 //    The address used to register the service to registry server.
 //    If there is a firewall, please remember that the port needs to open both tcp and udp.
-// bindAdvertise: 
+// advertise: 
 //    The address that the service will advertise to registry server. 
 //    Can be used for basic NAT traversal where both the internal ip:port and external ip:port are known.
 // registries:
@@ -92,7 +93,7 @@ Here is an example, start 2 registry server nodes, the number of starts can be d
 //    for example, the current service is an http server, 
 //    that is the address 172.16.3.3:80 that http listens to.
 
-r := register.New(id, bind, bindAdvertise, registries, group, addr)
+r := register.New(id, bind, advertise, registries, group, addr)
 err = r.Start()
 if err != nil {
 	panic(err)
@@ -103,7 +104,7 @@ if err != nil {
 ## Service Discovery
 ```
 // You can choose any one of the registered servers.
-registryAddr := "172.16.3.3:9001"
+registryAddr := "172.16.3.3:9801"
 group := "test-group"
 
 // Create a new RpcClient
@@ -131,7 +132,7 @@ log.Printf("[INFO] all service:%+v\n", allService)
 # Register the first web service, 
 # The service group is webservice-group,
 # The service ID is webserver1
-# The web service address is 172.16.3.3:8000
+# The web service address is 172.16.3.3:8080
 cd examples/service1
 go build -o webservice1 webservice1.go 
 ./webservice1
@@ -139,7 +140,7 @@ go build -o webservice1 webservice1.go
 # Register the second web service, 
 # The service group is webservice-group,
 # The service ID is webserver2
-# The web service address is 172.16.3.3:8001
+# The web service address is 172.16.3.3:8081
 cd examples/service2
 go build -o webservice2 webservice2.go
 ./webservice2

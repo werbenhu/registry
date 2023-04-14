@@ -8,17 +8,18 @@ import (
 	"github.com/werbenhu/chash"
 )
 
-// http提供http接口给客户端查询服务
+// http server object
 type Http struct {
 	addr     string
 	listener net.Listener
 }
 
+// NetHttp new a http server object
 func NewHttp() *Http {
 	return &Http{}
 }
 
-// /match返回根据组名和key来匹配对应的服务
+// match assign a service to a key with consistent hashing algorithm
 func (h *Http) match(c *gin.Context) {
 	name := c.Query("group")
 	key := c.Query("key")
@@ -59,7 +60,10 @@ func (h *Http) match(c *gin.Context) {
 	})
 }
 
-// /members返回某个组里面的所有服务
+// members() get services list of a group
+// groupName:
+//
+//	the group name of the services
 func (h *Http) members(c *gin.Context) {
 	name := c.Query("group")
 	group, err := chash.GetGroup(name)
@@ -89,7 +93,10 @@ func (h *Http) members(c *gin.Context) {
 	})
 }
 
-// 启动http api服务
+// Start() start http server
+// addr:
+//
+//	the addr that http server listen to
 func (h *Http) Start(addr string) error {
 	var err error
 	h.addr = addr
@@ -105,7 +112,7 @@ func (h *Http) Start(addr string) error {
 	return r.RunListener(h.listener)
 }
 
-// 停止http api服务
+// Stop() stop http server
 func (h *Http) Stop() {
 	if h.listener != nil {
 		h.listener.Close()

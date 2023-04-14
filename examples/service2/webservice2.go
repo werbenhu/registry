@@ -18,7 +18,7 @@ var (
 	ServiceId = "webserver2"
 )
 
-// 登录接口
+// login function
 func login(c *gin.Context) {
 	userid := c.Query("userid")
 	c.JSON(http.StatusOK, map[string]any{
@@ -29,31 +29,37 @@ func login(c *gin.Context) {
 
 func main() {
 	var err error
+	registries := "172.16.3.3:7370"
+	bind := ":8371"
+	bindAdvertise := "172.16.3.3:8371"
+	addr := "172.16.3.3:8001"
 
-	// 路由服务器的地址，服务自动发现的时候，需要注册到路由服务器去，
-	// 多个用逗号隔开，这里只需要一个，路由服务器中任意选择一个都可以
-	routers := "172.16.3.3:7370"
-
-	// addr是当前本服务需要和路由服务器通信的地址，
-	// 如果有防火墙，请记得端口需要同时打开tcp和udp
-	addr := ":8371"
-
-	// 对外公布的服务发现通信的地址，需要这个参数涉及到网关有端口映射的时候，
-	// 比如docker，内部监听的地址是127.0.0.1:80, 映射到对外则是公网IP:8000
-	advertise := "172.16.3.3:8371"
-
-	// 当前本服务提供服务的地址，比如当前服务是http服务器，那就是http监听的那个地址172.16.3.3:8000
-	service := "172.16.3.3:8001"
-
-	// 将当前服务注册到路由服务器
-	reg := register.New(ServiceId, addr, advertise, routers, WebGroup, service)
+	// New() create a register object
+	// id:
+	//    service id
+	// bind:
+	//    The address used to register the service to registry server.
+	//    If there is a firewall, please remember that the port needs to open both tcp and udp.
+	// advertise:
+	//    The address that the service will advertise to registry server.
+	//    Can be used for basic NAT traversal where both the internal ip:port and external ip:port are known.
+	// registries:
+	//    The addresses of the registry servers, if there are more than one, separate them with commas,
+	//    such as "192.168.1.101:7370,192.168.1.102:7370"
+	// group:
+	//    Group name the current service belongs to.
+	// addr:
+	//    The address currently provided by this service to the client,
+	//    for example, the current service is an http server,
+	//    that is the address 172.16.3.3:80 that http listens to.
+	reg := register.New(ServiceId, bind, bindAdvertise, registries, WebGroup, addr)
 	err = reg.Start()
 	if err != nil {
 		panic(err)
 	}
 
-	// 启动http服务
+	// start web service
 	r := gin.Default()
 	r.GET("/login", login)
-	r.Run(service)
+	r.Run(addr)
 }

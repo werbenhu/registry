@@ -8,29 +8,31 @@ import (
 )
 
 const (
-	//路由服务默认的组名
+	// Registry service default group name
 	registryName = "registry-group"
 
-	//一致性哈希，每一个服务需要虚拟成多少份elemnts
+	// This indicates how many replicated elements of a service need to be virtualized
 	DefaultReplicas = "10000"
 )
 
-type registry struct {
+// Registry is the registry server object
+type Registry struct {
 	opt  *Option
 	serf Discovery
 	api  Api
 }
 
-func New(opts []IOption) *registry {
+// New a registry object that can start a registry server when calling Serve().
+func New(opts []IOption) *Registry {
 
 	option := DefaultOption()
 	for _, o := range opts {
 		o(option)
 	}
-	s := &registry{opt: option}
+	s := &Registry{opt: option}
 
-	if len(s.opt.Service) == 0 {
-		s.opt.Service = s.opt.ApiAddr
+	if len(s.opt.Advertise) == 0 {
+		s.opt.Advertise = s.opt.Addr
 	}
 
 	if len(s.opt.Advertise) == 0 {
@@ -39,11 +41,11 @@ func New(opts []IOption) *registry {
 
 	s.serf = NewSerf(NewMember(
 		s.opt.Id,
-		s.opt.Addr,
-		s.opt.Advertise,
+		s.opt.Bind,
+		s.opt.BindAdvertise,
 		s.opt.Registries,
 		registryName,
-		s.opt.Service,
+		s.opt.Advertise,
 	))
 
 	s.api = NewRpcServer()
@@ -51,42 +53,48 @@ func New(opts []IOption) *registry {
 	return s
 }
 
-func (s *registry) Serve() error {
+// Serve run the registry server
+func (s *Registry) Serve() error {
 	if err := s.serf.Start(); err != nil {
 		return err
 	}
 	go func() {
-		if err := s.api.Start(s.opt.ApiAddr); err != nil {
+		if err := s.api.Start(s.opt.Addr); err != nil {
 			log.Panic(err)
 		}
 	}()
 	return nil
 }
 
-func (s *registry) Close() {
+// Close will close the registry server
+func (s *Registry) Close() {
 	s.api.Stop()
 	s.serf.Stop()
 }
 
-func (s *registry) OnMemberJoin(m *Member) error {
-	log.Printf("[INFO] a new member joined, id:%s, addr:%s, group:%s, service:%s\n",
-		m.Id, m.Addr, m.Service.Group, m.Service.Addr)
+// OnMemberJoin triggered when a new service is registered
+func (s *Registry) OnMemberJoin(m *Member) error {
+	log.Printf("[INFO] a new member joined, id:%s, bind:%s, group:%s, service:%s\n",
+		m.Id, m.Bind, m.Service.Group, m.Service.Addr)
 	return s.insert(m)
 }
 
-func (s *registry) OnMemberLeave(m *Member) error {
-	log.Printf("[INFO] a new member left, id:%s, addr:%s, group:%s, service:%s\n",
-		m.Id, m.Addr, m.Service.Group, m.Service.Addr)
+// OnMemberLeave triggered when a new service is leaves
+func (s *Registry) OnMemberLeave(m *Member) error {
+	log.Printf("[INFO] a new member left, id:%s, bind:%s, group:%s, service:%s\n",
+		m.Id, m.Bind, m.Service.Group, m.Service.Addr)
 	return s.delete(m)
 }
 
-func (s *registry) OnMemberUpdate(m *Member) error {
-	log.Printf("[INFO] a new member updated, id:%s, addr:%s, group:%s, service:%s\n",
-		m.Id, m.Addr, m.Service.Group, m.Service.Addr)
+// OnMemberLeave triggered when a new service is updated
+func (s *Registry) OnMemberUpdate(m *Member) error {
+	log.Printf("[INFO] a new member updated, id:%s, bind:%s, group:%s, service:%s\n",
+		m.Id, m.Bind, m.Service.Group, m.Service.Addr)
 	return s.insert(m)
 }
 
-func (s *registry) delete(m *Member) error {
+// delete a service from chash
+func (s *Registry) delete(m *Member) error {
 	if len(m.Service.Group) == 0 {
 		return ErrGroupNameEmpty
 	}
@@ -103,7 +111,8 @@ func (s *registry) delete(m *Member) error {
 	return nil
 }
 
-func (s *registry) insert(m *Member) error {
+// insert a service to chash
+func (s *Registry) insert(m *Member) error {
 	if len(m.Service.Group) == 0 {
 		return ErrGroupNameEmpty
 	}
@@ -125,7 +134,8 @@ func (s *registry) insert(m *Member) error {
 	return nil
 }
 
-func (s *registry) Match(groupName string, key string) (*Service, error) {
+// Match assign a service to a key with consistent hashing algorithm
+func (s *Registry) Match(groupName string, key string) (*Service, error) {
 	group, err := chash.GetGroup(groupName)
 	if err != nil {
 		return nil, err
@@ -142,7 +152,11 @@ func (s *registry) Match(groupName string, key string) (*Service, error) {
 	return &m.Service, nil
 }
 
-func (s *registry) Members(groupName string) []*Service {
+// Members get services list of a group
+// groupName:
+//
+//	the group name of the services
+func (s *Registry) Members(groupName string) []*Service {
 	services := make([]*Service, 0)
 	group, err := chash.GetGroup(groupName)
 	if err != nil {

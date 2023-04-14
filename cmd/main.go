@@ -14,12 +14,12 @@ import (
 )
 
 func main() {
-	id := flag.String("id", "", "服务ID，不能为空")
-	addr := flag.String("addr", ":7370", "服务发现通信的地址")
-	advertise := flag.String("advertise", ":7370", "对外公布的服务发现通信的地址")
-	registries := flag.String("registries", "", "注册服务器地址，如果是第一个可以为空，多个用逗号隔开")
-	apiAddr := flag.String("api-addr", ":8080", "查询服务器的地址")
-	service := flag.String("service", "", "对外公布的查询服务器的地址")
+	id := flag.String("id", "", "The service id, cannot be empty")
+	bind := flag.String("bind", ":7370", "The address used to register the service (default \":7370\").")
+	bindAdvertise := flag.String("bind-advertise", ":7370", "The address will advertise to other services (default \":7370\").")
+	registries := flag.String("registries", "", " Registry server addresses, it can be empty, and multiples are separated by commas.")
+	addr := flag.String("addr", ":9800", "The address used for service discovery (default \":9800\").")
+	advertise := flag.String("advertise", "", "The address will advertise to client for service discover (default \":9800\").")
 
 	flag.Parse()
 	if *id == "" {
@@ -34,21 +34,21 @@ func main() {
 		done <- true
 	}()
 
-	router := registry.New([]registry.IOption{
+	r := registry.New([]registry.IOption{
 		registry.OptId(*id),
+		registry.OptBind(*bind),
+		registry.OptBindAdvertise(*bindAdvertise),
 		registry.OptAddr(*addr),
 		registry.OptAdvertise(*advertise),
 		registry.OptRegistries(*registries),
-		registry.OptApiAddr(*apiAddr),
-		registry.OptService(*service),
 	})
 
-	err := router.Serve()
+	err := r.Serve()
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	log.Printf("[INFO] router start finished.\n")
+	log.Printf("[INFO] registry server start finished.\n")
 	<-done
-	router.Close()
+	r.Close()
 }

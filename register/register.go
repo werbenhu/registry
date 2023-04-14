@@ -6,38 +6,52 @@ package register
 
 import registry "github.com/werbenhu/registry"
 
-// 注册器：对注册的封装，服务提供者直接使用注册器就可以很容易的注册服务到路由服务器
+// Register can be easily userd to register a service
 type Register struct {
 	serf    registry.Discovery
 	handler registry.Handler
 	member  *registry.Member
 }
 
-// 新建一个注册
-// id： 是需要注册的服务的ID
-// addr： 当前服务跟路由服务器通信的地址
-// advertise: 对外公布的服务发现通信的地址
-// routers: 路由服务器的地址，多个用逗号隔开
-// group: 服务所属的组
-// service: 服务提供服务的地址
-func New(id string, addr string, advertise string, routers string, group string, service string) *Register {
-	member := registry.NewMember(id, addr, advertise, routers, group, service)
+// New() create a Register object
+// id: service id
+// bind:
+//
+//	The address used to register the service to registry server. If there is a firewall, please remember that the port needs to open both tcp and udp.
+//
+// advertise:
+//
+//	The address that the service will advertise to registry server. Can be used for basic NAT traversal where both the internal ip:port and external ip:port are known.
+//
+// registries:
+//
+//	The addresses of the registry servers, if there are more than one, separate them with commas, such as "192.168.1.101:7370,192.168.1.102:7370"
+//
+// group:
+//
+//	Group name of the current service belongs to.
+//
+// addr:
+//
+//	The address currently provided by this service to the client, for example, the current service is an http server, that is the address 172.16.3.3:80 that http listens to.
+func New(id string, bind string, advertise string, registries string, group string, addr string) *Register {
+	member := registry.NewMember(id, bind, advertise, registries, group, addr)
 	return &Register{member: member}
 }
 
-// hander将允许服务监听注册服务器收到的新注册、更新以及删除注册事件
+// SetHandler() set event processing handler when new services are discovered
 func (r *Register) SetHandler(h registry.Handler) {
 	r.handler = h
 }
 
-// Run将注册本服务到路由服务器，并保持双方的通信
+// Start the register
 func (r *Register) Start() error {
 	r.serf = registry.NewSerf(r.member)
 	r.serf.SetHandler(r.handler)
 	return r.serf.Start()
 }
 
-// 关闭注册器
+// Close the register
 func (r *Register) Stop() {
 	r.serf.Stop()
 }
