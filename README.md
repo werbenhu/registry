@@ -37,15 +37,15 @@ go build -o registry
    -id string
         Service ID, cannot be empty
   -bind string
-        The address that the registry server used to communicate with other services (default ":7370").
+        The address used to register the service (default ":7370").
   -bind-advertise string
-        The address that the registry server will advertise to other services (default ":7370").
+        The address will advertise to other services (default ":7370").
   -addr string
         The address used for service discovery (default ":8080").
   -advertise string
-        The address that the registry server will advertise to client for service discover (default ":8080").
+        The address will advertise to client for service discover (default ":8080").
   -registries string
-        Registry server address, if it is the first one, it can be empty, and multiples are separated by commas.
+        Registry server addresses, it can be empty, and multiples are separated by commas.
   
 ```
 ## Starting registry server
@@ -77,7 +77,7 @@ Here is an example, start 2 registry server nodes, the number of starts can be d
 ```
 // id: service ID
 // bind: 
-//    The current service needs to communicate with the address of the registry server. 
+//    The address used to register the service to registry server.
 //    If there is a firewall, please remember that the port needs to open both tcp and udp.
 // bindAdvertise: 
 //    The address that the service will advertise to registry server. 
