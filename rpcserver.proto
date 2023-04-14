@@ -21,7 +21,7 @@ message MembersResponse {
   repeated MatchResponse services = 1;
 }
 
-service Router {
+service R {
   rpc Match (MatchRequest) returns (MatchResponse) {}
   rpc Members (MembersRequest) returns (MembersResponse) {}
 }

@@ -81,7 +81,7 @@ func (s *RpcServer) Start(addr string) error {
 	}
 
 	s.rpc = grpc.NewServer()
-	RegisterRouterServer(s.rpc, s)
+	RegisterRServer(s.rpc, s)
 	return s.rpc.Serve(listener)
 }
 
