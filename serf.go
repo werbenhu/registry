@@ -52,6 +52,7 @@ type Serf struct {
 func NewSerf(local *Member) *Serf {
 	s := &Serf{
 		member: local,
+		events: make(chan serf.Event),
 	}
 	return s
 }
@@ -96,7 +97,6 @@ func (s *Serf) Start() error {
 	var port int
 	cfg := serf.DefaultConfig()
 
-	s.events = make(chan serf.Event, 3)
 	host, port, err = s.splitHostPort(s.member.Advertise)
 	if err != nil {
 		return err
@@ -134,7 +134,8 @@ func (s *Serf) Start() error {
 		return err
 	}
 
-	go s.Loop()
+	s.members.Store(s.member.Id, s.member)
+	go s.loop()
 	log.Printf("[INFO] serf discovery started, current service bind:%s, advertise addr:%s\n", s.member.Bind, s.member.Advertise)
 	if len(s.member.Registries) > 0 {
 		members := strings.Split(s.member.Registries, ",")
@@ -164,7 +165,7 @@ func (s *Serf) splitHostPort(addr string) (string, int, error) {
 }
 
 // Loop read the exposing Serf events and pass events to the handler
-func (s *Serf) Loop() {
+func (s *Serf) loop() {
 	for e := range s.events {
 		switch e.EventType() {
 		case serf.EventMemberJoin:
