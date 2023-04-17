@@ -1,7 +1,7 @@
 
 <p align="center">
 
-[![build status](https://github.com/werbenhu/registry/workflows/Go/badge.svg)](https://github.com/werbenhu/chash/actions)
+[![build status](https://github.com/werbenhu/registry/workflows/Go/badge.svg)](https://github.com/werbenhu/registry/actions)
 [![Go Reference](https://pkg.go.dev/badge/github.com/werbenhu/registry.svg)](https://pkg.go.dev/github.com/werbenhu/registry)
 [![contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat)](https://github.com/werbenhu/registry/issues)
 
