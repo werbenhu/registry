@@ -137,6 +137,13 @@ func (m *Member) SetTag(key string, val string) {
 		m.tags = make(map[string]string)
 	}
 	m.tags[key] = val
+	if key == TagAddr {
+		m.Service.Addr = val
+	} else if key == TagGroup {
+		m.Service.Group = val
+	} else if key == TagReplicas {
+		m.Replicas = val
+	}
 }
 
 // GetTag get extra info of this service by tag
