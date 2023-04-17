@@ -51,7 +51,7 @@ type Member struct {
 	Advertise string `json:"advertise"`
 
 	// The addresses of the registry servers, if there are more than one, separate them with commas, such as "192.168.1.101:7370,192.168.1.102:7370"
-	Registries string `json:"registries"`
+	Registries string `json:"-"`
 
 	// How many replicated elements of a service need to be virtualized
 	Replicas string `json:"replicas"`
