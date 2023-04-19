@@ -87,6 +87,7 @@ func (s *Serf) Stop() {
 	}
 	if s.events != nil {
 		close(s.events)
+		s.events = nil
 	}
 }
 
