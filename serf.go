@@ -96,6 +96,7 @@ func (s *Serf) Start() error {
 	var host string
 	var port int
 	cfg := serf.DefaultConfig()
+	s.events = make(chan serf.Event)
 
 	host, port, err = s.splitHostPort(s.member.Advertise)
 	if err != nil {
@@ -110,7 +111,6 @@ func (s *Serf) Start() error {
 	}
 	cfg.MemberlistConfig.BindAddr = host
 	cfg.MemberlistConfig.BindPort = port
-	s.events = make(chan serf.Event)
 	cfg.EventCh = s.events
 
 	filter := &logutils.LevelFilter{

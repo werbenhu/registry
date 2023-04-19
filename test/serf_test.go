@@ -61,7 +61,7 @@ func Test_SerfMembers(t *testing.T) {
 	assert.NotNil(t, serf1)
 	err := serf1.Start()
 	assert.Nil(t, err)
-	time.Sleep(time.Second)
+	time.Sleep(sleepTime)
 
 	member2 := registry.NewMember(
 		"test_id2",
@@ -75,7 +75,7 @@ func Test_SerfMembers(t *testing.T) {
 	assert.NotNil(t, serf2)
 	err = serf2.Start()
 	assert.Nil(t, err)
-	time.Sleep(time.Second)
+	time.Sleep(sleepTime)
 
 	ms1 := serf1.Members()
 	ms2 := serf2.Members()

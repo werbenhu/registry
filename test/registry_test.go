@@ -11,7 +11,7 @@ import (
 )
 
 var (
-	SleepTime = time.Millisecond * 100
+	sleepTime = time.Millisecond * 100
 )
 
 func Test_RegistryNew(t *testing.T) {
@@ -36,7 +36,7 @@ func Test_RegistryServe(t *testing.T) {
 		registry.OptAdvertise("127.0.0.1:9000"),
 	})
 	go r.Serve()
-	time.Sleep(SleepTime)
+	time.Sleep(sleepTime)
 	r.Close()
 }
 
@@ -66,7 +66,7 @@ func Test_RegistryOnMemberJoin(t *testing.T) {
 		registry.OptAdvertise("127.0.0.1:9000"),
 	})
 	go r.Serve()
-	time.Sleep(SleepTime)
+	time.Sleep(sleepTime)
 
 	serviceId := "testid"
 	serviceGroup := "testgroup"
@@ -102,7 +102,7 @@ func Test_RegistryOnMemberLeave(t *testing.T) {
 		registry.OptAdvertise("127.0.0.1:9000"),
 	})
 	go r.Serve()
-	time.Sleep(SleepTime)
+	time.Sleep(sleepTime)
 
 	serviceId := "testid"
 	serviceGroup := "testgroup"
@@ -138,7 +138,7 @@ func Test_RegistryOnMemberUpdate(t *testing.T) {
 		registry.OptAdvertise("127.0.0.1:9000"),
 	})
 	go r.Serve()
-	time.Sleep(SleepTime)
+	time.Sleep(sleepTime)
 
 	serviceId := "testid"
 	serviceGroup := "testgroup"
@@ -182,7 +182,7 @@ func Test_RegistryMatch(t *testing.T) {
 		registry.OptAdvertise("127.0.0.1:9000"),
 	})
 	go r.Serve()
-	time.Sleep(SleepTime)
+	time.Sleep(sleepTime)
 
 	serviceGroup := "testgroup"
 	member1 := registry.NewMember(
@@ -234,7 +234,7 @@ func Test_RegistryMembers(t *testing.T) {
 		registry.OptAdvertise("127.0.0.1:9000"),
 	})
 	go r.Serve()
-	time.Sleep(SleepTime)
+	time.Sleep(sleepTime)
 
 	serviceGroup := "testgroup"
 
