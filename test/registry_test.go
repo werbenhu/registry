@@ -1,6 +1,7 @@
 package test
 
 import (
+	"sort"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -256,6 +257,9 @@ func Test_RegistryMembers(t *testing.T) {
 	assert.Nil(t, err)
 
 	services := r.Members(serviceGroup)
+	sort.Slice(services, func(i int, j int) bool {
+		return services[i].Id < services[j].Id
+	})
 	assert.NotNil(t, services)
 	assert.Len(t, services, 2)
 
