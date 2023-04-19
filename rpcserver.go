@@ -2,6 +2,7 @@ package registry
 
 import (
 	"context"
+	"log"
 	"net"
 
 	"github.com/werbenhu/chash"
@@ -89,5 +90,6 @@ func (s *RpcServer) Start(addr string) error {
 func (s *RpcServer) Stop() {
 	if s.rpc != nil {
 		s.rpc.Stop()
+		log.Printf("[DEBUG] rpc server stoped.\n")
 	}
 }

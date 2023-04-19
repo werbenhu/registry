@@ -75,6 +75,7 @@ func (s *Registry) Close() {
 		s.api.Stop()
 	}
 	chash.RemoveAllGroup()
+	log.Printf("[DEBUG] registry closed.\n")
 }
 
 // OnMemberJoin triggered when a new service is registered
