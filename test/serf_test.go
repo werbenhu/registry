@@ -92,6 +92,7 @@ func Test_SerfMembers(t *testing.T) {
 	}
 	assert.Equal(t, true, assert.ObjectsAreEqual(expert, ms1))
 
+	time.Sleep(sleepTime)
 	serf1.Stop()
 	serf2.Stop()
 }
