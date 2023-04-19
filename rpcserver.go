@@ -89,5 +89,6 @@ func (s *RpcServer) Start(addr string) error {
 func (s *RpcServer) Stop() {
 	if s.rpc != nil {
 		s.rpc.Stop()
+		s.rpc = nil
 	}
 }
