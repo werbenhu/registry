@@ -52,7 +52,6 @@ type Serf struct {
 func NewSerf(local *Member) *Serf {
 	s := &Serf{
 		member: local,
-		events: make(chan serf.Event),
 	}
 	return s
 }
@@ -87,7 +86,6 @@ func (s *Serf) Stop() {
 	}
 	if s.events != nil {
 		close(s.events)
-		s.events = nil
 	}
 }
 
@@ -111,6 +109,7 @@ func (s *Serf) Start() error {
 	}
 	cfg.MemberlistConfig.BindAddr = host
 	cfg.MemberlistConfig.BindPort = port
+	s.events = make(chan serf.Event)
 	cfg.EventCh = s.events
 
 	filter := &logutils.LevelFilter{
