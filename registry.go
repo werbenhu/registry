@@ -39,6 +39,7 @@ func New(opts []IOption) *Registry {
 		s.opt.Advertise = s.opt.Addr
 	}
 
+	s.api = NewRpcServer()
 	s.serf = NewSerf(NewMember(
 		s.opt.Id,
 		s.opt.Bind,
@@ -47,23 +48,18 @@ func New(opts []IOption) *Registry {
 		registryName,
 		s.opt.Advertise,
 	))
-
-	s.api = NewRpcServer()
 	s.serf.SetHandler(s)
 	return s
 }
 
 // Serve run the registry server
-func (s *Registry) Serve() error {
+func (s *Registry) Serve() {
 	if err := s.serf.Start(); err != nil {
-		return err
+		panic(err)
 	}
-	go func() {
-		if err := s.api.Start(s.opt.Addr); err != nil {
-			log.Panic(err)
-		}
-	}()
-	return nil
+	if err := s.api.Start(s.opt.Addr); err != nil {
+		panic(err)
+	}
 }
 
 // Close will close the registry server
@@ -75,7 +71,7 @@ func (s *Registry) Close() {
 		s.api.Stop()
 	}
 	chash.RemoveAllGroup()
-	log.Printf("[DEBUG] registry closed.\n")
+	log.Printf("[DEBUG] registry server is closed.\n")
 }
 
 // OnMemberJoin triggered when a new service is registered

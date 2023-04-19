@@ -3,10 +3,15 @@ package test
 import (
 	"sort"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/werbenhu/chash"
 	"github.com/werbenhu/registry"
+)
+
+var (
+	SleepTime = time.Millisecond * 100
 )
 
 func Test_RegistryNew(t *testing.T) {
@@ -19,7 +24,6 @@ func Test_RegistryNew(t *testing.T) {
 		registry.OptAdvertise("127.0.0.1:9000"),
 	})
 	assert.NotNil(t, r)
-	r.Close()
 }
 
 func Test_RegistryServe(t *testing.T) {
@@ -31,8 +35,8 @@ func Test_RegistryServe(t *testing.T) {
 		registry.OptAddr("127.0.0.1:9000"),
 		registry.OptAdvertise("127.0.0.1:9000"),
 	})
-	err := r.Serve()
-	assert.Nil(t, err)
+	go r.Serve()
+	time.Sleep(SleepTime)
 	r.Close()
 }
 
@@ -45,9 +49,10 @@ func Test_RegistryServeErr(t *testing.T) {
 		registry.OptAddr("127.0.0.1:9000"),
 		registry.OptAdvertise("127.0.0.1:9000"),
 	})
-	err := r.Serve()
-	assert.NotNil(t, err)
-	assert.Equal(t, registry.ErrParsePort, err)
+
+	assert.Panics(t, func() {
+		r.Serve()
+	})
 	r.Close()
 }
 
@@ -60,8 +65,8 @@ func Test_RegistryOnMemberJoin(t *testing.T) {
 		registry.OptAddr("127.0.0.1:9000"),
 		registry.OptAdvertise("127.0.0.1:9000"),
 	})
-	err := r.Serve()
-	assert.Nil(t, err)
+	go r.Serve()
+	time.Sleep(SleepTime)
 
 	serviceId := "testid"
 	serviceGroup := "testgroup"
@@ -75,7 +80,7 @@ func Test_RegistryOnMemberJoin(t *testing.T) {
 		serviceGroup,
 		serviceAddr,
 	)
-	err = r.OnMemberJoin(member)
+	err := r.OnMemberJoin(member)
 	assert.Nil(t, err)
 
 	service, err := r.Match(serviceGroup, "xxx")
@@ -96,8 +101,8 @@ func Test_RegistryOnMemberLeave(t *testing.T) {
 		registry.OptAddr("127.0.0.1:9000"),
 		registry.OptAdvertise("127.0.0.1:9000"),
 	})
-	err := r.Serve()
-	assert.Nil(t, err)
+	go r.Serve()
+	time.Sleep(SleepTime)
 
 	serviceId := "testid"
 	serviceGroup := "testgroup"
@@ -111,7 +116,7 @@ func Test_RegistryOnMemberLeave(t *testing.T) {
 		serviceGroup,
 		serviceAddr,
 	)
-	err = r.OnMemberJoin(member)
+	err := r.OnMemberJoin(member)
 	assert.Nil(t, err)
 
 	err = r.OnMemberLeave(member)
@@ -132,8 +137,8 @@ func Test_RegistryOnMemberUpdate(t *testing.T) {
 		registry.OptAddr("127.0.0.1:9000"),
 		registry.OptAdvertise("127.0.0.1:9000"),
 	})
-	err := r.Serve()
-	assert.Nil(t, err)
+	go r.Serve()
+	time.Sleep(SleepTime)
 
 	serviceId := "testid"
 	serviceGroup := "testgroup"
@@ -148,7 +153,7 @@ func Test_RegistryOnMemberUpdate(t *testing.T) {
 		serviceAddr,
 	)
 
-	err = r.OnMemberJoin(member)
+	err := r.OnMemberJoin(member)
 	assert.Nil(t, err)
 	service, err := r.Match(serviceGroup, "xxx")
 	assert.Nil(t, err)
@@ -176,11 +181,10 @@ func Test_RegistryMatch(t *testing.T) {
 		registry.OptAddr("127.0.0.1:9000"),
 		registry.OptAdvertise("127.0.0.1:9000"),
 	})
-	err := r.Serve()
-	assert.Nil(t, err)
+	go r.Serve()
+	time.Sleep(SleepTime)
 
 	serviceGroup := "testgroup"
-
 	member1 := registry.NewMember(
 		"testid1",
 		"127.0.0.1:8370",
@@ -189,7 +193,7 @@ func Test_RegistryMatch(t *testing.T) {
 		serviceGroup,
 		"127.0.0.1:80",
 	)
-	err = r.OnMemberJoin(member1)
+	err := r.OnMemberJoin(member1)
 	assert.Nil(t, err)
 
 	member2 := registry.NewMember(
@@ -229,8 +233,8 @@ func Test_RegistryMembers(t *testing.T) {
 		registry.OptAddr("127.0.0.1:9000"),
 		registry.OptAdvertise("127.0.0.1:9000"),
 	})
-	err := r.Serve()
-	assert.Nil(t, err)
+	go r.Serve()
+	time.Sleep(SleepTime)
 
 	serviceGroup := "testgroup"
 
@@ -242,7 +246,7 @@ func Test_RegistryMembers(t *testing.T) {
 		serviceGroup,
 		"127.0.0.1:80",
 	)
-	err = r.OnMemberJoin(member1)
+	err := r.OnMemberJoin(member1)
 	assert.Nil(t, err)
 
 	member2 := registry.NewMember(

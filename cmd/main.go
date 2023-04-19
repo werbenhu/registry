@@ -43,11 +43,7 @@ func main() {
 		registry.OptRegistries(*registries),
 	})
 
-	err := r.Serve()
-	if err != nil {
-		log.Fatal(err)
-	}
-
+	go r.Serve()
 	log.Printf("[INFO] registry server start finished.\n")
 	<-done
 	r.Close()

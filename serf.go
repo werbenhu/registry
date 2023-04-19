@@ -87,7 +87,7 @@ func (s *Serf) Stop() {
 	if s.events != nil {
 		close(s.events)
 	}
-	log.Printf("[DEBUG] serf closed.\n")
+	log.Printf("[DEBUG] serf server is stoped.\n")
 }
 
 // Start hashicorp/serf agent
