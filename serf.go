@@ -16,39 +16,26 @@ import (
 )
 
 const (
-	// tag key of group name
+	// TagGroup is the tag key of the group name.
 	TagGroup = "group"
 
-	// tag key of service address
+	// TagAddr is the tag key of the service address.
 	TagAddr = "addr"
 
-	// tag key of replicas
+	// TagReplicas is the tag key of replicas.
 	TagReplicas = "replicas"
 )
 
+// Serf represents a discovery instance of hashicorp/serf.
 type Serf struct {
-
-	// Event is a generic interface for exposing Serf events
-	// Clients will usually need to use a type switches to get
-	// to a more useful type
-	events chan serf.Event
-
-	// local member of current registry server
-	member *Member
-
-	// Serf is a single node that is part of a single cluster that gets
-	// events about joins/leaves/failures/etc. It is created with the Create
-	// method.
-	serf *serf.Serf
-
-	// Auto-discover event notification interface
-	handler Handler
-
-	// Members of all services
-	members sync.Map
+	events  chan serf.Event // A channel to expose Serf events.
+	member  *Member         // The local member of the current registry server.
+	serf    *serf.Serf      // A single node that is part of a single cluster that gets events about joins/leaves/failures/etc.
+	handler Handler         // An auto-discover event notification interface.
+	members sync.Map        // The members of all services.
 }
 
-// NewSerf create a discovery instance of hashicorp/serf
+// NewSerf creates a new instance of Serf.
 func NewSerf(local *Member) *Serf {
 	s := &Serf{
 		member: local,
@@ -56,7 +43,7 @@ func NewSerf(local *Member) *Serf {
 	return s
 }
 
-// LocalMember get current registry service
+// LocalMember returns the current registry service.
 func (s *Serf) LocalMember() *Member {
 	node, ok := s.members.Load(s.member.Id)
 	if !ok {
@@ -65,7 +52,7 @@ func (s *Serf) LocalMember() *Member {
 	return node.(*Member)
 }
 
-// Members get members of all services
+// Members returns the members of all services.
 func (s *Serf) Members() []*Member {
 	nodes := make([]*Member, 0)
 	s.members.Range(func(key any, val any) bool {
@@ -75,11 +62,12 @@ func (s *Serf) Members() []*Member {
 	return nodes
 }
 
-// Set event processing handler when new services are discovered
+// SetHandler sets the event processing handler when new services are discovered.
 func (s *Serf) SetHandler(h Handler) {
 	s.handler = h
 }
 
+// Stop stops the Serf server.
 func (s *Serf) Stop() {
 	if s.serf != nil {
 		s.serf.Shutdown()
@@ -87,17 +75,19 @@ func (s *Serf) Stop() {
 	if s.events != nil {
 		close(s.events)
 	}
-	log.Printf("[DEBUG] serf server is stoped.\n")
+	log.Printf("[DEBUG] serf server stopped.\n")
 }
 
-// Start hashicorp/serf agent
+// Start starts the HashiCorp Serf agent with the configuration provided in s.
 func (s *Serf) Start() error {
+	// Initialize variables.
 	var err error
 	var host string
 	var port int
 	cfg := serf.DefaultConfig()
 	s.events = make(chan serf.Event)
 
+	// Extract host and port from Advertise address and set them in the configuration.
 	host, port, err = s.splitHostPort(s.member.Advertise)
 	if err != nil {
 		return err
@@ -105,6 +95,7 @@ func (s *Serf) Start() error {
 	cfg.MemberlistConfig.AdvertiseAddr = host
 	cfg.MemberlistConfig.AdvertisePort = port
 
+	// Extract host and port from Bind address and set them in the configuration.
 	host, port, err = s.splitHostPort(s.member.Bind)
 	if err != nil {
 		return err
@@ -113,6 +104,7 @@ func (s *Serf) Start() error {
 	cfg.MemberlistConfig.BindPort = port
 	cfg.EventCh = s.events
 
+	// Set up the logger for Serf and the memberlist package.
 	filter := &logutils.LevelFilter{
 		Levels:   []logutils.LogLevel{"DEBUG", "INFO", "WARN", "ERROR"},
 		MinLevel: logutils.LogLevel("ERROR"),
@@ -127,17 +119,25 @@ func (s *Serf) Start() error {
 	cfg.Logger = log.New(os.Stderr, "", log.LstdFlags)
 	cfg.Logger.SetOutput(filter)
 	cfg.MemberlistConfig.Logger = cfg.Logger
+
+	// Set the node name and tags in the configuration.
 	cfg.NodeName = s.member.Id
 	cfg.Tags = s.member.GetTags()
 
+	// Create the Serf agent with the configuration.
 	s.serf, err = serf.Create(cfg)
 	if err != nil {
 		return err
 	}
 
+	// Store the member in the members map and start the loop.
 	s.members.Store(s.member.Id, s.member)
 	go s.loop()
-	log.Printf("[INFO] serf discovery started, current service bind:%s, advertise addr:%s\n", s.member.Bind, s.member.Advertise)
+
+	// Print the bind and advertise addresses to the log.
+	log.Printf("[INFO] Serf discovery started, current service bind:%s, advertise addr:%s\n", s.member.Bind, s.member.Advertise)
+
+	// Join any registries that were specified in the member's configuration.
 	if len(s.member.Registries) > 0 {
 		members := strings.Split(s.member.Registries, ",")
 		s.Join(members)
@@ -145,13 +145,13 @@ func (s *Serf) Start() error {
 	return nil
 }
 
-// Join joins an existing Serf cluster.
+// Join joins the Serf agent to an existing Serf cluster with the specified members.
 func (s *Serf) Join(members []string) error {
 	_, err := s.serf.Join(members, true)
 	return err
 }
 
-// Split address into host names and ports
+// splitHostPort splits an address of the form "host:port" into separate host and port strings.
 func (s *Serf) splitHostPort(addr string) (string, int, error) {
 	h, p, err := net.SplitHostPort(addr)
 	if err != nil {
@@ -165,16 +165,18 @@ func (s *Serf) splitHostPort(addr string) (string, int, error) {
 	return h, port, nil
 }
 
-// Loop read the exposing Serf events and pass events to the handler
+// loop reads exposing Serf events and passes events to the handler
 func (s *Serf) loop() {
 	for e := range s.events {
 		switch e.EventType() {
+		// handle member join event
 		case serf.EventMemberJoin:
 			for _, member := range e.(serf.MemberEvent).Members {
 				addr := fmt.Sprintf("%s:%d", member.Addr, member.Port)
 				latest := NewSimpleMember(member.Name, addr, addr)
 				latest.SetTags(member.Tags)
 
+				// call handler's OnMemberJoin method and store member
 				if s.handler != nil {
 					if err := s.handler.OnMemberJoin(latest); err == nil {
 						s.members.Store(latest.Id, latest)
@@ -186,12 +188,14 @@ func (s *Serf) loop() {
 				s.members.Store(latest.Id, latest)
 			}
 
+		// handle member update event
 		case serf.EventMemberUpdate:
 			for _, member := range e.(serf.MemberEvent).Members {
 				addr := fmt.Sprintf("%s:%d", member.Addr, member.Port)
 				latest := NewSimpleMember(member.Name, addr, addr)
 				latest.SetTags(member.Tags)
 
+				// call handler's OnMemberUpdate method and store member
 				if s.handler != nil {
 					if err := s.handler.OnMemberUpdate(latest); err == nil {
 						s.members.Store(latest.Id, latest)
@@ -203,12 +207,14 @@ func (s *Serf) loop() {
 				s.members.Store(latest.Id, latest)
 			}
 
+		// handle member leave or failed event
 		case serf.EventMemberLeave, serf.EventMemberFailed:
 			for _, member := range e.(serf.MemberEvent).Members {
 				addr := fmt.Sprintf("%s:%d", member.Addr, member.Port)
 				latest := NewSimpleMember(member.Name, addr, addr)
 				latest.SetTags(member.Tags)
 
+				// delete member and call handler's OnMemberLeave method if it exists
 				s.members.Delete(latest.Id)
 				if s.handler != nil {
 					if err := s.handler.OnMemberLeave(latest); err != nil {

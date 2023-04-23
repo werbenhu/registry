@@ -7,31 +7,31 @@ package registry
 // Auto-discover event notification interface
 type Handler interface {
 
-	// Triggered when a new service is registered
+	// OnMemberJoin is triggered when a new service is registered.
 	OnMemberJoin(*Member) error
 
-	// Triggered when a new service leaves
+	// OnMemberLeave is triggered when a service leaves.
 	OnMemberLeave(*Member) error
 
-	// Triggered when a service is updated
+	// OnMemberUpdate is triggered when a service is updated.
 	OnMemberUpdate(*Member) error
 }
 
-// Auto-discover interface
+// Auto-discover interface.
 type Discovery interface {
 
-	// Set event processing handler when new services are discovered
+	// SetHandler sets the event processing handler when new services are discovered.
 	SetHandler(Handler)
 
-	// Get members of all registry services
+	// Members returns the members of all services.
 	Members() []*Member
 
-	// Get current registry service
+	// LocalMember returns the current service.
 	LocalMember() *Member
 
-	// Start the discovery service
+	// Start starts the discovery service.
 	Start() error
 
-	// Stop the discovery service
+	// Stop stops the discovery service.
 	Stop()
 }

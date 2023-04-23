@@ -6,33 +6,35 @@ import (
 	"github.com/rs/xid"
 )
 
-// Options for register server
+// Option represents the options for registry server.
 type Option struct {
 
-	// Id: service id
+	// Id is the service ID.
 	Id string
 
-	// The address used to register the service.
-	// If there is a firewall, please remember that the port needs to open both tcp and udp.
+	// Bind is the address used to register the service.
+	// If there is a firewall, ensure that the port is open for both TCP and UDP.
 	Bind string
 
-	// The address that the service will advertise to other services for registering.
-	// Can be used for basic NAT traversal where both the internal ip:port and external ip:port are known.
+	// BindAdvertise is the address that the service will advertise to other services for registering.
+	// Can be used for basic NAT traversal where both the internal IP:port and external IP:port are known.
 	BindAdvertise string
 
-	// The addresses of the other registry servers, if there are more than one, separate them with commas,
-	// such as "192.168.1.101:7370,192.168.1.102:7370"
+	// Registries are the addresses of other registry servers.
+	// If there are more than one, separate them with commas, such as "192.168.1.101:7370,192.168.1.102:7370".
 	Registries string
 
-	// The address used for service discovery (default ":8080").
+	// Addr is the address used for service discovery.
 	Addr string
 
-	// The address will advertise to client for service discover
+	// Advertise is the address that will be advertised to clients for service discovery.
 	Advertise string
 }
 
+// IOption represents a function that modifies the Option.
 type IOption func(o *Option)
 
+// OptId sets the service ID option.
 func OptId(id string) IOption {
 	return func(o *Option) {
 		if id != "" {
@@ -41,18 +43,21 @@ func OptId(id string) IOption {
 	}
 }
 
+// OptAddr sets the service discovery address option.
 func OptAddr(addr string) IOption {
 	return func(o *Option) {
 		o.Addr = addr
 	}
 }
 
+// OptAdvertise sets the advertised address for service discovery option.
 func OptAdvertise(addr string) IOption {
 	return func(o *Option) {
 		o.Advertise = addr
 	}
 }
 
+// OptBindAdvertise sets the advertised address for service registration option.
 func OptBindAdvertise(addr string) IOption {
 	return func(o *Option) {
 		if addr != "" {
@@ -61,6 +66,7 @@ func OptBindAdvertise(addr string) IOption {
 	}
 }
 
+// OptBind sets the address used for service registration option.
 func OptBind(addr string) IOption {
 	return func(o *Option) {
 		if addr != "" {
@@ -69,6 +75,7 @@ func OptBind(addr string) IOption {
 	}
 }
 
+// OptRegistries sets the addresses of other registry servers option.
 func OptRegistries(registries string) IOption {
 	return func(o *Option) {
 		if registries != "" {
@@ -77,6 +84,7 @@ func OptRegistries(registries string) IOption {
 	}
 }
 
+// DefaultOption returns the default options for registering a server.
 func DefaultOption() *Option {
 	hostname, _ := os.Hostname()
 	return &Option{

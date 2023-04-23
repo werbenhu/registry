@@ -5,30 +5,19 @@ import (
 	"sync"
 )
 
-// The service object
+// Service represents a service object.
 type Service struct {
-	// The service id
+	// The ID of the service.
 	Id string `json:"id"`
 
-	// The group name of this service
+	// The group name of this service.
 	Group string `json:"group"`
 
-	// The service addr provided to the client
+	// The service address provided to the client.
 	Addr string `json:"addr"`
 }
 
-// NewService Create a new service object
-// id:
-//
-//	The service id
-//
-// group:
-//
-//	The group name of this service
-//
-// addr:
-//
-//	The service addr provided to the client
+// NewService creates a new service object.
 func NewService(id string, group string, addr string) *Service {
 	return &Service{
 		Id:    id,
@@ -37,44 +26,33 @@ func NewService(id string, group string, addr string) *Service {
 	}
 }
 
-// Member is used for auto-discover, when a service is discoverd a Member Object be created.
+// Member is used for auto-discovery. When a service is discovered, a Member object is created.
 type Member struct {
 	sync.Mutex
 
-	// The service id
+	// The ID of the service.
 	Id string `json:"id"`
 
-	// The address used to register the service to registry server.
+	// The address used to register the service to the registry server.
 	Bind string `json:"bind"`
 
-	// The address that the service will advertise to registry server.
+	// The address that the service will advertise to the registry server.
 	Advertise string `json:"advertise"`
 
-	// The addresses of the registry servers, if there are more than one, separate them with commas, such as "192.168.1.101:7370,192.168.1.102:7370"
+	// The addresses of the registry servers. If there are more than one, separate them with commas, such as "192.168.1.101:7370,192.168.1.102:7370".
 	Registries string `json:"-"`
 
-	// How many replicated elements of a service need to be virtualized
+	// The number of replicated elements of a service that need to be virtualized.
 	Replicas string `json:"replicas"`
 
-	// Service info
+	// Service information.
 	Service Service `json:"service"`
 
-	// Tags for extra info
+	// Tags for extra information.
 	tags map[string]string
 }
 
-// NewSimpleMember create a simple Member object, it does not contain the address of the service
-// id:
-//
-//	The service id
-//
-// bind:
-//
-//	The address used to register the service to registry server.
-//
-// advertise:
-//
-//	The address that the service will advertise to registry server.
+// NewSimpleMember creates a simple Member object. It does not contain the address of the service.
 func NewSimpleMember(id string, bind string, advertise string) *Member {
 	return &Member{
 		Id:         id,
@@ -88,27 +66,7 @@ func NewSimpleMember(id string, bind string, advertise string) *Member {
 	}
 }
 
-// NewMember create a Member object
-// id: service id
-// bind:
-//
-//	The address used to register the service to registry server. If there is a firewall, please remember that the port needs to open both tcp and udp.
-//
-// advertise:
-//
-//	The address that the service will advertise to registry server. Can be used for basic NAT traversal where both the internal ip:port and external ip:port are known.
-//
-// registries:
-//
-//	The addresses of the registry servers, if there are more than one, separate them with commas, such as "192.168.1.101:7370,192.168.1.102:7370"
-//
-// group:
-//
-//	Group name of the current service belongs to.
-//
-// addr:
-//
-//	The address currently provided by this service to the client, for example, the current service is an http server, that is the address 172.16.3.3:80 that http listens to.
+// NewMember creates a new Member object with the given attributes.
 func NewMember(id string, bind string, advertise string, registries string, group string, addr string) *Member {
 	return &Member{
 		Id:         id,
@@ -124,19 +82,25 @@ func NewMember(id string, bind string, advertise string, registries string, grou
 	}
 }
 
-// IsSelf return true if the two member's id is the same
+// IsSelf returns true if the given Member object has the same ID as this Member object.
 func (m *Member) IsSelf(b *Member) bool {
 	return m.Id == b.Id
 }
 
-// SetTag set extra info of this service by tag
+// SetTag sets the extra information associated with the given tag for this Member object.
 func (m *Member) SetTag(key string, val string) {
 	m.Lock()
 	defer m.Unlock()
+
+	// If tags are not initialized, initialize them.
 	if m.tags == nil {
 		m.tags = make(map[string]string)
 	}
+
+	// Set the tag's value.
 	m.tags[key] = val
+
+	// Update service attributes based on specific tags.
 	if key == TagAddr {
 		m.Service.Addr = val
 	} else if key == TagGroup {
@@ -146,13 +110,17 @@ func (m *Member) SetTag(key string, val string) {
 	}
 }
 
-// GetTag get extra info of this service by tag
+// GetTag retrieves the value associated with the given tag for this Member object.
 func (m *Member) GetTag(key string) (string, bool) {
 	m.Lock()
 	defer m.Unlock()
+
+	// If tags are not initialized, return false.
 	if m.tags == nil {
 		return "", false
 	}
+
+	// Retrieve the tag's value.
 	val, ok := m.tags[key]
 	return val, ok
 }
@@ -162,23 +130,30 @@ func (m *Member) SetTags(tags map[string]string) {
 	if m.tags == nil {
 		m.tags = make(map[string]string)
 	}
+
+	// Set each tag using SetTag method.
 	for k, v := range tags {
 		m.SetTag(k, v)
 	}
 
+	// Update service attributes based on specific tags.
 	m.Service.Group, _ = m.GetTag(TagGroup)
 	m.Service.Addr, _ = m.GetTag(TagAddr)
 	m.Replicas, _ = m.GetTag(TagReplicas)
 }
 
-// GetTag get all tags of this service
+// GetTags retrieves all tags and their values for this Member object.
 func (m *Member) GetTags() map[string]string {
+
+	// Update specific tags before retrieving all tags.
 	m.SetTag(TagAddr, m.Service.Addr)
 	m.SetTag(TagGroup, m.Service.Group)
 	m.SetTag(TagReplicas, m.Replicas)
 
 	m.Lock()
 	defer m.Unlock()
+
+	// Clone the tags to avoid data races.
 	clone := make(map[string]string)
 	for k, v := range m.tags {
 		clone[k] = v
@@ -186,15 +161,14 @@ func (m *Member) GetTags() map[string]string {
 	return clone
 }
 
-// Marshal returns the JSON encoding of member.
+// Marshal returns the JSON encoding of this Member object.
 func (m *Member) Marshal() ([]byte, error) {
 	m.Lock()
 	defer m.Unlock()
 	return json.Marshal(m)
 }
 
-// Unmarshal parses the JSON-encoded data and stores the result
-// into a Member object.
+// Unmarshal parses the given JSON-encoded data and stores
 func (m *Member) Unmarshal(paylaod []byte) error {
 	m.Lock()
 	defer m.Unlock()

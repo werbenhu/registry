@@ -9,18 +9,18 @@ import (
 	"google.golang.org/grpc"
 )
 
-// RpcServer is a grpc server for client for service discovery
+// RpcServer is a gRPC server for service discovery
 type RpcServer struct {
 	addr string
 	rpc  *grpc.Server
 }
 
-// NewRpcServer create a new RpcServer object
+// NewRpcServer creates a new RpcServer object
 func NewRpcServer() *RpcServer {
 	return &RpcServer{}
 }
 
-// Match assign a service to a key with consistent hashing algorithm
+// Match assigns a service to a key using the consistent hashing algorithm
 func (s *RpcServer) Match(ctx context.Context, req *MatchRequest) (*MatchResponse, error) {
 
 	group, err := chash.GetGroup(req.Group)
@@ -45,7 +45,7 @@ func (s *RpcServer) Match(ctx context.Context, req *MatchRequest) (*MatchRespons
 	}, nil
 }
 
-// Members get services list of a group
+// Members returns a list of services in a group
 func (s *RpcServer) Members(ctx context.Context, req *MembersRequest) (*MembersResponse, error) {
 	group, err := chash.GetGroup(req.Group)
 	if err != nil {
@@ -71,7 +71,7 @@ func (s *RpcServer) Members(ctx context.Context, req *MembersRequest) (*MembersR
 	}, nil
 }
 
-// Start running the grpc server
+// Start starts the gRPC server
 func (s *RpcServer) Start(addr string) error {
 	var err error
 
@@ -86,10 +86,10 @@ func (s *RpcServer) Start(addr string) error {
 	return s.rpc.Serve(listener)
 }
 
-// Stop stop the grpc server
+// Stop stops the gRPC server
 func (s *RpcServer) Stop() {
 	if s.rpc != nil {
 		s.rpc.Stop()
-		log.Printf("[DEBUG] rpc server is stoped.\n")
+		log.Printf("[DEBUG] Rpc server is stoped.\n")
 	}
 }

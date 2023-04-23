@@ -1,3 +1,5 @@
+// Package client provides a gRPC client for service discovery.
+
 // SPDX-License-Identifier: MIT
 // SPDX-FileCopyrightText: 2023 werbenhu
 // SPDX-FileContributor: werbenhu
@@ -11,22 +13,22 @@ import (
 	"google.golang.org/grpc"
 )
 
-// RpcClient is a grpc client for discovery
+// RpcClient is a gRPC client for service discovery.
 type RpcClient struct {
-	// registry server address
+	// Addr is the registry server address.
 	Addr string
 
-	// grpc connection
+	// conn is the gRPC connection.
 	conn *grpc.ClientConn
 
-	// grpc client object
+	// reg is the gRPC client object.
 	reg registry.RClient
 }
 
-// NewRpcClient create a new RpcClient object
-func NewRpcClient(router string) (*RpcClient, error) {
-	client := &RpcClient{Addr: router}
-	// connecting to registry server
+// NewRpcClient creates a new RpcClient object and connects to the registry server at `addr`.
+func NewRpcClient(addr string) (*RpcClient, error) {
+	client := &RpcClient{Addr: addr}
+	// Connect to the registry server.
 	conn, err := grpc.Dial(client.Addr, grpc.WithInsecure())
 	if err != nil {
 		return nil, err
@@ -37,19 +39,20 @@ func NewRpcClient(router string) (*RpcClient, error) {
 	return client, nil
 }
 
-// Close close the rpc client
+// Close closes the gRPC client connection.
 func (c *RpcClient) Close() {
 	c.conn.Close()
 }
 
-// Match assign a service to a key with consistent hashing algorithm
-// groupName:
+// Match assigns a service to a key using the consistent hashing algorithm.
 //
-//	the group name of the services
+// Parameters:
+// - group: The group name of the services.
+// - key: The key, such as user ID, device ID, etc.
 //
-// key:
-//
-//	the key such as user ID, device ID, etc
+// Returns:
+// - The service that matches the key.
+// - An error if the service cannot be found.
 func (c *RpcClient) Match(group string, key string) (*registry.Service, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
@@ -61,14 +64,18 @@ func (c *RpcClient) Match(group string, key string) (*registry.Service, error) {
 	if err != nil {
 		return nil, err
 	}
-	// The service contains three attributes: service ID, group name, and service address
+	// The service contains three attributes: service ID, group name, and service address.
 	return registry.NewService(service.Id, service.Group, service.Addr), nil
 }
 
-// Members get services list of a group
-// groupName:
+// Members returns the list of services in a group.
 //
-//	the group name of the services
+// Parameters:
+// - group: The group name of the services.
+//
+// Returns:
+// - The list of services in the group.
+// - An error if the group does not exist or cannot be accessed.
 func (c *RpcClient) Members(group string) ([]*registry.Service, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()

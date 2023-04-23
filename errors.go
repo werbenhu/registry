@@ -4,19 +4,23 @@
 
 package registry
 
+// Err represents a custom error type with an error message and error code.
 type Err struct {
-	Msg  string
-	Code int
+	Msg  string // the error message
+	Code int    // the error code
 }
 
+// String returns the error message as a string.
 func (e Err) String() string {
 	return e.Msg
 }
 
+// Error returns the error message as a string (implements the error interface).
 func (e Err) Error() string {
 	return e.Msg
 }
 
+// Pre-defined error instances with specific error codes and messages.
 var (
 	ErrMemberIdEmpty       = Err{Code: 10000, Msg: "id can't be empty"}
 	ErrReplicasParam       = Err{Code: 10000, Msg: "member replicas param error"}

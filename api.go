@@ -8,8 +8,7 @@ package registry
 type Api interface {
 
 	// Start the discovery server
-	// addr:
-	//	the addr that discovery server listens to
+	// addr: the addr that discovery server listens to
 	Start(addr string) error
 
 	// Stop the discovery server

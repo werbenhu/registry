@@ -8,24 +8,26 @@ import (
 	"github.com/werbenhu/chash"
 )
 
-// http server object
+// Http represents the http server object
 type Http struct {
-	addr     string
-	listener net.Listener
+	addr     string       // the address that http server listens to
+	listener net.Listener // the listener for the http server
 }
 
-// NetHttp new a http server object
+// NewHttp returns a new Http object
 func NewHttp() *Http {
 	return &Http{}
 }
 
-// match assign a service to a key with consistent hashing algorithm
+// match assigns a service to a key using consistent hashing algorithm
 func (h *Http) match(c *gin.Context) {
 	name := c.Query("group")
 	key := c.Query("key")
 
+	// Get the group based on the provided name
 	group, err := chash.GetGroup(name)
 	if err != nil {
+		// Return error response if group not found
 		c.JSON(http.StatusOK, gin.H{
 			"code": 1,
 			"msg":  err.Error(),
@@ -33,8 +35,10 @@ func (h *Http) match(c *gin.Context) {
 		return
 	}
 
+	// Match the key with a member in the group
 	_, payload, err := group.Match(key)
 	if err != nil {
+		// Return error response if key not found
 		c.JSON(http.StatusOK, gin.H{
 			"code": 2,
 			"msg":  err.Error(),
@@ -42,8 +46,10 @@ func (h *Http) match(c *gin.Context) {
 		return
 	}
 
+	// Unmarshal the member payload
 	m := &Member{}
 	if err := m.Unmarshal(payload); err != nil {
+		// Return error response if payload cannot be unmarshalled
 		c.JSON(http.StatusOK, gin.H{
 			"code": 3,
 			"msg":  err.Error(),
@@ -51,6 +57,7 @@ func (h *Http) match(c *gin.Context) {
 		return
 	}
 
+	// Return success response with the matched service
 	c.JSON(http.StatusOK, gin.H{
 		"code": 0,
 		"msg":  "success",
@@ -60,14 +67,13 @@ func (h *Http) match(c *gin.Context) {
 	})
 }
 
-// members() get services list of a group
-// groupName:
-//
-//	the group name of the services
+// members returns the list of services for a group
 func (h *Http) members(c *gin.Context) {
 	name := c.Query("group")
+	// Get the group based on the provided name
 	group, err := chash.GetGroup(name)
 	if err != nil {
+		// Return error response if group not found
 		c.JSON(http.StatusOK, gin.H{
 			"code": 1,
 			"msg":  err.Error(),
@@ -75,6 +81,7 @@ func (h *Http) members(c *gin.Context) {
 		return
 	}
 
+	// Get all the elements in the group and extract their services
 	elements := group.GetElements()
 	services := make([]Service, 0)
 	for _, element := range elements {
@@ -84,6 +91,7 @@ func (h *Http) members(c *gin.Context) {
 		}
 	}
 
+	// Return success response with the list of services
 	c.JSON(http.StatusOK, gin.H{
 		"code": 0,
 		"msg":  "success",
@@ -93,10 +101,7 @@ func (h *Http) members(c *gin.Context) {
 	})
 }
 
-// Start() start http server
-// addr:
-//
-//	the addr that http server listen to
+// Start starts the http server
 func (h *Http) Start(addr string) error {
 	var err error
 	h.addr = addr
@@ -105,6 +110,7 @@ func (h *Http) Start(addr string) error {
 	r.GET("/match", h.match)
 	r.GET("/members", h.members)
 
+	// Listen on the provided address and run the http server
 	h.listener, err = net.Listen("tcp", h.addr)
 	if err != nil {
 		return err
@@ -112,7 +118,7 @@ func (h *Http) Start(addr string) error {
 	return r.RunListener(h.listener)
 }
 
-// Stop() stop http server
+// Stop stops the http server
 func (h *Http) Stop() {
 	if h.listener != nil {
 		h.listener.Close()
