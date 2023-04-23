@@ -4,6 +4,7 @@
 package main
 
 import (
+	"flag"
 	"net/http"
 	"sync"
 
@@ -13,16 +14,15 @@ import (
 )
 
 var (
-	mu        sync.Mutex
-	WebGroup  = "webservice-group"
-	ServiceId = "webserver1"
+	mu       sync.Mutex
+	WebGroup = "webservice-group"
 )
 
 // login handles the login request.
 func login(c *gin.Context) {
 	userid := c.Query("userid")
 	c.JSON(http.StatusOK, map[string]any{
-		"msg":    "success from:" + ServiceId,
+		"msg":    "success",
 		"userid": userid,
 	})
 }
@@ -31,10 +31,11 @@ func main() {
 	var err error
 
 	// Configuration for registry registration
-	registries := "172.16.3.3:7370"
-	bind := ":8370"
-	advertise := "172.16.3.3:8370"
-	addr := "172.16.3.3:8000"
+	registries := flag.String("registries", "", "Registry server addresses, it can be empty, and multiples are separated by commas.")
+	id := flag.String("id", "", "The service id")
+	addr := flag.String("addr", ":9800", "The address used for service discovery (default \":9800\").")
+	advertise := flag.String("advertise", "", "The address will advertise to client for service discover (default \":9800\").")
+	bind := flag.String("bind", ":7370", "The address used to register the service (default \":7370\").")
 
 	// Create a new register object.
 	// id: The service id.
@@ -43,7 +44,7 @@ func main() {
 	// registries: The addresses of the registry servers, separated by commas if there are more than one.
 	// group: The group name the current service belongs to.
 	// addr: The address currently provided by this service to the client.
-	reg := register.New(ServiceId, bind, advertise, registries, WebGroup, addr)
+	reg := register.New(*id, *bind, *advertise, *registries, WebGroup, *addr)
 
 	// Start the registry.
 	err = reg.Start()
@@ -54,5 +55,5 @@ func main() {
 	// Start the web service.
 	r := gin.Default()
 	r.GET("/login", login)
-	r.Run(addr)
+	r.Run(*addr)
 }

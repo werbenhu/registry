@@ -8,7 +8,7 @@
 </p>
 
 # Registry
-**A simple registry server to discover your services, it uses consistent hashing algorithm for service discovery.**
+**Registry is a simple service registry that uses the consistent hashing algorithm for service discovery.**
 
 ## What is consistent hashing
 
@@ -59,20 +59,22 @@ go build -o registry
 ```
 ## Starting registry server
 
-Here is an example, start 2 registry server nodes, the number of starts can be determined according to the actual situation.
+To start a registry server, follow these steps:
 
+1. Determine the number of nodes required based on your actual situation.
+2. Execute the following commands to start the nodes:
 
 ``` sh
-# starting the first node
+# Starting the first node
 ./registry -bind=":7370" \
      -bind-advertise="172.16.3.3:7370" \
      -id=service-1 \
      -addr=":9800" \
      -advertise="172.16.3.3:9800"
 
-# starting the second node
-# The second one has one more parameter -registries="172.16.3.3:7370",
-# this is because the second one needs to be registered to the first one
+# Starting the second node
+# The second one has an additional parameter -registries="172.16.3.3:7370",
+# because the second node needs to register with the first one
 ./registry -bind=":7371" \
      -bind-advertise="172.16.3.3:7371" \
      -id=service-2 \
@@ -81,36 +83,36 @@ Here is an example, start 2 registry server nodes, the number of starts can be d
      -advertise="172.16.3.3:9801"
 ```
 
+Note: If there is a firewall, make sure to open both TCP and UDP ports.
+
+
 ## Register services
 
-```
-// id: 
-//    service ID
-// bind: 
-//    The address used to register the service to registry server.
-//    If there is a firewall, please remember that the port needs to open both tcp and udp.
-// advertise: 
-//    The address that the service will advertise to registry server. 
-//    Can be used for basic NAT traversal where both the internal ip:port and external ip:port are known.
-// registries:
-//    The addresses of the registry server, if there are more than one, separate them with commas, 
-//    such as "192.168.1.101:7370,192.168.1.102:7370"
-// group: 
-//    Group name the current service belongs to.
-// addr: 
-//    The address currently provided by this service to the client, 
-//    for example, the current service is an http server, 
-//    that is the address 172.16.3.3:80 that http listens to.
+Use the following code snippet to register services:
 
+```
+// Create a new registration object
 r := register.New(id, bind, advertise, registries, group, addr)
+
+// Start the registration
 err = r.Start()
 if err != nil {
 	panic(err)
 }
 ```
 
+Parameters:
+
+- `id`: Service ID.
+- `bind`: Address used to register the service to the registry server.
+- `advertise`: Address that the service will advertise to the registry server. Can be used for basic NAT traversal where both the internal IP:port and external IP:port are known.
+- `registries`: Addresses of the registry server(s). If there are more than one, separate them with commas, such as "192.168.1.101:7370,192.168.1.102:7370".
+- `group`: Group name the current service belongs to.
+- `addr`: Address currently provided by this service to the client. For example, if the current service is an HTTP server, the address is 172.16.3.3:80, which is the address that HTTP listens to.
+
 
 ## Service Discovery
+### Usage
 ```
 // You can choose any one of the registered servers.
 registryAddr := "172.16.3.3:9801"
@@ -124,35 +126,42 @@ if err != nil {
 
 // Use consistent hash to assign services based on user ID
 service, err := client.Match(groupName, "user-id-1")
-log.Printf("[INFO] match key:%s, serviceId:%s, serviceAddr:%s\n", key, service.Id, service.Addr)
+if err != nil {
+	panic(err)
+}
+
+log.Printf("[INFO] Matched key: %s, Service ID: %s, Service Address: %s\n", key, service.Id, service.Addr)
 
 // Get all services of the group
 allService, err := client.Members(group)
 if err != nil {
-	log.Printf("[ERROR] get all service err:%s\n", err)
+      log.Printf("[ERROR] Failed to get all services: %s\n", err)
 }
-log.Printf("[INFO] all service:%+v\n", allService)
+log.Printf("[INFO] All services: %+v\n", allService)
 ```
 
 ## Examples
 
 ### Register two web services.
 ```sh
-# Register the first web service, 
-# The service group is webservice-group,
-# The service ID is webserver1
-# The web service address is 172.16.3.3:8080
-cd examples/service1
-go build -o webservice1 webservice1.go 
-./webservice1
+# Register the first web service.
+cd examples/service
+go build -o webservice webservice.go 
+./webservice \
+	-group=webservice-group \
+	-id=webserver1 \
+	-registries=172.16.3.3:7370 \
+	-bind=":8370"
+	-addr="172.16.3.3:8080"
 
-# Register the second web service, 
-# The service group is webservice-group,
-# The service ID is webserver2
-# The web service address is 172.16.3.3:8081
-cd examples/service2
-go build -o webservice2 webservice2.go
-./webservice2
+# Register the second web service.
+cd examples/service
+./webservice \
+	-group=webservice-group \
+	-id=webserver2 \
+	-registries=172.16.3.3:7370 \
+	-bind=":8371" \
+	-addr="172.16.3.3:8081"
 ```
 
 ### Client discovery service
