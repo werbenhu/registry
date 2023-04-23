@@ -7,6 +7,8 @@
 [![Mit License](https://img.shields.io/github/license/mashape/apistatus.svg)](https://pkg.go.dev/github.com/werbenhu/registry)
 </p>
 
+[English](README.md) | [简体中文](README-CN.md)
+
 # Registry
 **Registry is a simple service registry that uses the consistent hashing algorithm for service discovery.**
 
