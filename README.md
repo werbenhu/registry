@@ -85,7 +85,7 @@ To start a registry server, follow these steps:
      -advertise="172.16.3.3:9801"
 ```
 
-Note: If there is a firewall, make sure to open both TCP and UDP ports.
+Note: If there is a firewall, make sure to open both TCP and UDP on advertise ports.
 
 
 ## Register services
@@ -153,7 +153,8 @@ go build -o webservice webservice.go
 	-group=webservice-group \
 	-id=webserver1 \
 	-registries=172.16.3.3:7370 \
-	-bind=":8370"
+	-bind=":8370" \
+	-advertise="172.16.3.3:8370" \
 	-addr="172.16.3.3:8080"
 
 # Register the second web service.
@@ -163,6 +164,7 @@ cd examples/service
 	-id=webserver2 \
 	-registries=172.16.3.3:7370 \
 	-bind=":8371" \
+	-advertise="172.16.3.3:8371" \
 	-addr="172.16.3.3:8081"
 ```
 

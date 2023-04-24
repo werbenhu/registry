@@ -78,7 +78,7 @@ go build -o registry
      -advertise="172.16.3.3:9801"
 ```
 
-注意：如果存在防火墙，请确保同时打开TCP和UDP端口。
+注意：如果存在防火墙，请确保同时打开advertise的TCP和UDP端口。
 
 
 ## 注册服务

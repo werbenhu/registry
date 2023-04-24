@@ -22,6 +22,11 @@ type Register struct {
 // group: Group name of the current service belongs to.
 // addr: The address currently provided by this service to the client. For example, if the current service is an HTTP server, this would be the address that HTTP listens to, such as 172.16.3.3:80.
 func New(id string, bind string, advertise string, registries string, group string, addr string) *Register {
+
+	// If advertise not set, use bind addr as advertise instead
+	if advertise == "" {
+		advertise = bind
+	}
 	member := registry.NewMember(id, bind, advertise, registries, group, addr)
 	return &Register{member: member}
 }

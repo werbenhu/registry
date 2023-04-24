@@ -75,7 +75,7 @@ func (s *Serf) Stop() {
 	if s.events != nil {
 		close(s.events)
 	}
-	log.Printf("[DEBUG] serf server stopped.\n")
+	log.Printf("[DEBUG] Serf server stopped.\n")
 }
 
 // Start starts the HashiCorp Serf agent with the configuration provided in s.
@@ -90,6 +90,7 @@ func (s *Serf) Start() error {
 	// Extract host and port from Advertise address and set them in the configuration.
 	host, port, err = s.splitHostPort(s.member.Advertise)
 	if err != nil {
+		log.Printf("[ERROR] Serf splitHostPort advertise addr:%s failed.\n", s.member.Advertise)
 		return err
 	}
 	cfg.MemberlistConfig.AdvertiseAddr = host
@@ -98,6 +99,7 @@ func (s *Serf) Start() error {
 	// Extract host and port from Bind address and set them in the configuration.
 	host, port, err = s.splitHostPort(s.member.Bind)
 	if err != nil {
+		log.Printf("[ERROR] Serf splitHostPort bind addr:%s failed.\n", s.member.Bind)
 		return err
 	}
 	cfg.MemberlistConfig.BindAddr = host
