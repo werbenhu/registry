@@ -69,9 +69,13 @@ func (s *Serf) SetHandler(h Handler) {
 
 // Stop stops the Serf server.
 func (s *Serf) Stop() {
+	// Shut down serf
 	if s.serf != nil {
 		s.serf.Shutdown()
+		// Wait until serf has finished shutting down
+		<-s.serf.ShutdownCh()
 	}
+
 	if s.events != nil {
 		close(s.events)
 	}
