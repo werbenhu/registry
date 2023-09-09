@@ -165,6 +165,3 @@ go build -o client main.go
 ./client
 ```
 
-## Contributions
-Contributions and feedback are both welcomed and encouraged! Open an [issue](https://github.com/werbenhu/registry/issues) to report a bug, ask a question, or make a feature request.
-
