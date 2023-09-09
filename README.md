@@ -16,7 +16,6 @@
 
 > Consistent hashing is a hashing technique that performs really well when operated in a dynamic environment where the distributed system scales up and scales down frequently. 
 
-### Consistent Hashing
 Consistent Hashing allows distributing data in such a way that minimize reorganization when nodes are added or removed, hence making the system easier to scale up or down.
 
 The key idea is that it's a distribution scheme that DOES NOT depend directly on the number of servers.
